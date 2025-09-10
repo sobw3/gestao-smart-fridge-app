@@ -1,0 +1,14 @@
+{
+  "name": "gestao-smart-fridge",
+  "version": "1.0.0",
+  "description": "Aplicação de gestão financeira para a Smart Fridge",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

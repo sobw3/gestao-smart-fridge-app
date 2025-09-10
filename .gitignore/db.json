@@ -1,0 +1,184 @@
+{
+  "pdvs": [
+    {
+      "id": "id_1757438475481_y4yex0rrz",
+      "name": "Monte Sião V",
+      "initialInvestment": 1700,
+      "fixedCosts": [
+        {
+          "id": "id_1757438475481_iz24g087t",
+          "name": "Aluguel + luz",
+          "value": 650
+        }
+      ],
+      "variableCosts": [
+        {
+          "id": "id_1757438515585_79x9xbel4",
+          "name": "Compra de produto 1",
+          "value": 50,
+          "date": "2025-09-09T17:21:55.585Z"
+        },
+        {
+          "id": "id_1757438528584_lx7hom9c0",
+          "name": "Compra de produto 2",
+          "value": 50,
+          "date": "2025-09-09T17:22:08.585Z"
+        }
+      ],
+      "inventory": [
+        {
+          "productId": "id_1757438492921_zzsq0bk1s",
+          "quantity": 0,
+          "costHistory": []
+        },
+        {
+          "productId": "id_1757438503281_wbgw4de24",
+          "quantity": 0,
+          "costHistory": []
+        }
+      ]
+    },
+    {
+      "id": "id_1757438647624_c8hsgzj0l",
+      "name": "Monte Sião IV",
+      "initialInvestment": 3500,
+      "fixedCosts": [
+        {
+          "id": "id_1757438647624_5qd47uv8s",
+          "name": "Aluguel + luz",
+          "value": 650
+        }
+      ],
+      "variableCosts": [],
+      "inventory": []
+    }
+  ],
+  "products": [
+    {
+      "id": "id_1757438492921_zzsq0bk1s",
+      "name": "produto 1",
+      "currentCost": 5,
+      "resalePrice": 9
+    },
+    {
+      "id": "id_1757438503281_wbgw4de24",
+      "name": "produto 2",
+      "currentCost": 5,
+      "resalePrice": 7
+    }
+  ],
+  "sales": [
+    {
+      "id": "id_1757438546153_xqwejdcdl",
+      "pdvId": "id_1757438475481_y4yex0rrz",
+      "productId": "id_1757438492921_zzsq0bk1s",
+      "quantity": 2,
+      "unitPrice": 9,
+      "totalPrice": 18,
+      "costAtTimeOfSale": 5,
+      "date": "2025-09-09T17:22:26.153Z"
+    },
+    {
+      "id": "id_1757469546903_cdlcitbeu",
+      "pdvId": "id_1757438475481_y4yex0rrz",
+      "productId": "id_1757438492921_zzsq0bk1s",
+      "quantity": 8,
+      "unitPrice": 9,
+      "totalPrice": 72,
+      "costAtTimeOfSale": 5,
+      "date": "2025-09-10T01:59:06.903Z"
+    },
+    {
+      "id": "id_1757470072364_kz33a9ubj",
+      "pdvId": "id_1757438475481_y4yex0rrz",
+      "productId": "id_1757438503281_wbgw4de24",
+      "quantity": 10,
+      "unitPrice": 7,
+      "totalPrice": 70,
+      "costAtTimeOfSale": 5,
+      "date": "2025-09-10T02:07:52.364Z"
+    }
+  ],
+  "accountsPayable": [
+    {
+      "id": "id_1757438694912_io1u5h8o8",
+      "description": "Aluguel ",
+      "amount": 650,
+      "dueDate": "2025-09-21",
+      "pdvId": "id_1757438475481_y4yex0rrz",
+      "paid": true
+    }
+  ],
+  "accountsReceivable": [
+    {
+      "id": "id_1757469081475_y9gmntb69",
+      "description": "Mikaelly credito",
+      "amount": 100,
+      "dueDate": "2006-10-27",
+      "pdvId": "id_1757438475481_y4yex0rrz",
+      "paid": true,
+      "isRecurring": true,
+      "payments": [
+        {
+          "amount": 100,
+          "date": "2025-09-10T01:58:27.905Z"
+        }
+      ]
+    },
+    {
+      "id": "id_1757470228450_yonmx5ak3",
+      "description": "1111",
+      "amount": 11111,
+      "dueDate": "2025-09-09",
+      "pdvId": "id_1757438475481_y4yex0rrz",
+      "isRecurring": true,
+      "paid": true,
+      "payments": [
+        {
+          "amount": 11111,
+          "date": "2025-09-10T02:10:30.971Z"
+        }
+      ]
+    },
+    {
+      "id": "id_1757438727159_b8wjiii4k",
+      "description": "Mikaelly credito",
+      "amount": 50,
+      "dueDate": "2025-09-28",
+      "pdvId": "id_1757438647624_c8hsgzj0l",
+      "paid": true
+    }
+  ],
+  "centralCash": {
+    "balance": 0,
+    "transactions": [
+      {
+        "id": "id_1757469507905_fpcx3yzeq",
+        "type": "receivable",
+        "amount": 100,
+        "reason": "Recebimento: Mikaelly credito (Monte Sião V)",
+        "date": "2025-09-10T01:58:27.905Z"
+      },
+      {
+        "id": "id_1757470072364_mra9novch",
+        "type": "sale",
+        "amount": 70,
+        "reason": "Venda: produto 2 (Monte Sião V)",
+        "date": "2025-09-10T02:07:52.364Z"
+      },
+      {
+        "id": "id_1757470230971_jt1so7guz",
+        "type": "receivable",
+        "amount": 11111,
+        "reason": "Recebimento: 1111 (Monte Sião V)",
+        "date": "2025-09-10T02:10:30.971Z"
+      }
+    ]
+  },
+  "goals": {
+    "id_1757438475481_y4yex0rrz": {
+      "target": 2500
+    }
+  },
+  "activeView": "finances"
+}
