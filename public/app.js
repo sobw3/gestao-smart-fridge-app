@@ -20,6 +20,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/data');
             if (!response.ok) throw new Error('Falha ao buscar dados do servidor');
             state = await response.json();
+            // Garante que a estrutura de dados esteja sempre atualizada
+            if (!state.centralCash) state.centralCash = { walletBalance: 0, transactions: [] };
+            if (typeof state.centralCash.walletBalance !== 'number') state.centralCash.walletBalance = 0;
+            if (!state.products) state.products = [];
+            if (!state.pdvs) state.pdvs = [];
+            if (!state.sales) state.sales = [];
+            if (!state.accountsPayable) state.accountsPayable = [];
+            if (!state.accountsReceivable) state.accountsReceivable = [];
+            if (!state.goals) state.goals = {};
+
         } catch (error) {
             console.error(error);
             Swal.fire('Erro', 'Não foi possível carregar os dados. Tente recarregar a página.', 'error');
@@ -39,27 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    /**
-     * Formata um número para o formato de moeda BRL (Real).
-     * @param {number} value - O valor a ser formatado.
-     * @returns {string} O valor formatado como moeda.
-     */
     const formatCurrency = (value) => {
         if (typeof value !== 'number') return 'R$ 0,00';
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
 
-    /**
-     * Gera um ID único simples.
-     * @returns {string} Um ID único.
-     */
     const generateId = () => `id_${new Date().getTime()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // --- FUNÇÕES DE AUTENTICAÇÃO ---
 
-    const checkAuth = () => {
-        return sessionStorage.getItem('isLoggedIn') === 'true';
-    };
+    const checkAuth = () => sessionStorage.getItem('isLoggedIn') === 'true';
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -77,11 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.setItem('isLoggedIn', 'true');
                 await initApp();
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Usuário ou senha incorretos!',
-                });
+                Swal.fire({ icon: 'error', title: 'Oops...', text: 'Usuário ou senha incorretos!' });
             }
         } catch (error) {
             Swal.fire('Erro de Conexão', 'Não foi possível conectar ao servidor.', 'error');
@@ -105,7 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterByDate = (items, dateProp) => {
             let filtered = items;
             if (startDate) {
-                filtered = filtered.filter(item => new Date(item[dateProp]) >= new Date(startDate));
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                filtered = filtered.filter(item => new Date(item[dateProp]) >= start);
             }
             if (endDate) {
                 const end = new Date(endDate);
@@ -117,11 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         relevantSales = filterByDate(relevantSales, 'date');
         
-        // Faturamento e Custo das Vendas de Produtos
         const salesRevenue = relevantSales.reduce((sum, s) => sum + s.totalPrice, 0);
         const costOfGoods = relevantSales.reduce((sum, s) => sum + (s.costAtTimeOfSale * s.quantity), 0);
         
-        // Faturamento das Contas a Receber
         let receivablesRevenue = 0;
         relevantReceivables.forEach(receivable => {
             const paymentsInPeriod = filterByDate(receivable.payments, 'date');
@@ -129,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const revenue = salesRevenue + receivablesRevenue;
-        const netProfit = (salesRevenue - costOfGoods) + receivablesRevenue; // Lucro líquido considera o faturamento total
+        const netProfit = (salesRevenue - costOfGoods) + receivablesRevenue;
 
         const pdv = getPdv(pdvId);
         const fixedCosts = pdv?.fixedCosts.reduce((sum, c) => sum + c.value, 0) || 0;
@@ -140,11 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const stockValueCost = pdv?.inventory.reduce((sum, item) => {
             const product = getProduct(item.productId);
+            if (!product) return sum;
             return sum + (product.currentCost * item.quantity);
         }, 0) || 0;
 
         const stockValueResale = pdv?.inventory.reduce((sum, item) => {
             const product = getProduct(item.productId);
+            if (!product) return sum;
             return sum + (product.resalePrice * item.quantity);
         }, 0) || 0;
 
@@ -153,14 +150,14 @@ document.addEventListener('DOMContentLoaded', () => {
             revenue,
             netProfit,
             finalProfit,
-            ticket: relevantSales.length > 0 ? salesRevenue / relevantSales.length : 0, // Ticket médio apenas sobre vendas
+            ticket: relevantSales.length > 0 ? salesRevenue / relevantSales.length : 0,
             stockValueCost,
             stockValueResale,
             totalCosts
         };
     };
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO (VIEWS) ---
+    // --- RENDERIZAÇÃO ---
 
     const render = () => {
         if (!state.activeView) state.activeView = 'dashboard';
@@ -168,27 +165,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNavigation();
 
         switch (state.activeView) {
-            case 'dashboard':
-                renderDashboard();
-                break;
-            case 'pdvs':
-                renderPdvs();
-                break;
-            case 'products':
-                renderProducts();
-                break;
-            case 'finances':
-                renderFinances();
-                break;
-            case 'reports':
-                renderReports();
-                break;
-            case 'central_cash':
-                renderCentralCash();
-                break;
+            case 'dashboard': renderDashboard(); break;
+            case 'pdvs': renderPdvs(); break;
+            case 'products': renderProducts(); break;
+            case 'finances': renderFinances(); break;
+            case 'reports': renderReports(); break;
+            case 'central_cash': renderCentralCash(); break;
         }
     };
-    
+
     const updateNavigation = () => {
         const navLinks = [
             { id: 'dashboard', text: 'Dashboard', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>`},
@@ -202,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const navHtml = navLinks.map(link => `
             <button data-view="${link.id}" class="nav-link flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-full transition-colors ${state.activeView === link.id ? 'bg-orange-500 text-white' : 'text-gray-300 hover:bg-gray-600'}">
                 ${link.icon}
-                <span>${link.text}</span>
+                <span class="hidden md:inline">${link.text}</span>
             </button>
         `).join('');
         
@@ -214,45 +199,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', () => {
                 state.activeView = link.dataset.view;
-                mobileMenu.classList.add('hidden'); // Esconde menu mobile ao clicar
+                mobileMenu.classList.add('hidden');
                 render();
             });
         });
     };
 
     function renderDashboard() {
-        // ... (código da função renderDashboard inalterado) ...
-        const totalMetrics = state.pdvs.reduce((totals, pdv) => {
-            const metrics = calculatePdvMetrics(pdv.id);
-            totals.revenue += metrics.revenue;
-            totals.netProfit += metrics.netProfit;
-            totals.stockValueCost += metrics.stockValueCost;
-            totals.stockValueResale += metrics.stockValueResale;
-            totals.salesCount += metrics.salesCount;
-            return totals;
-        }, { revenue: 0, netProfit: 0, stockValueCost: 0, stockValueResale: 0, salesCount: 0 });
-    
-        const summaryCards = `
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg">
-                    <h3 class="text-sm font-medium text-gray-400">Faturamento Total</h3>
-                    <p class="mt-1 text-3xl font-semibold text-orange-500">${formatCurrency(totalMetrics.revenue)}</p>
-                </div>
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg">
-                    <h3 class="text-sm font-medium text-gray-400">Lucro Líquido (Vendas)</h3>
-                    <p class="mt-1 text-3xl font-semibold text-green-500">${formatCurrency(totalMetrics.netProfit)}</p>
-                </div>
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg">
-                    <h3 class="text-sm font-medium text-gray-400">Valor em Estoque (Custo)</h3>
-                    <p class="mt-1 text-3xl font-semibold text-blue-500">${formatCurrency(totalMetrics.stockValueCost)}</p>
-                </div>
-                 <div class="bg-gray-800 p-5 rounded-xl shadow-lg">
-                    <h3 class="text-sm font-medium text-gray-400">Potencial de Venda</h3>
-                    <p class="mt-1 text-3xl font-semibold text-purple-500">${formatCurrency(totalMetrics.stockValueResale)}</p>
-                </div>
-            </div>
-        `;
-    
         const pdvStatusSection = `
             <h2 class="text-2xl font-bold mb-4 text-orange-500">Status dos PDVs</h2>
             <div id="pdv-status-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -263,15 +216,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const goal = state.goals[pdv.id];
                     let goalProgressHtml = '<p class="text-xs text-gray-500">Nenhuma meta definida.</p>';
-                    if (goal) {
-                        const dailyTarget = goal.target / 30; // Simplificação para meta mensal
-                        const progress = (metrics.revenue / goal.target) * 100;
+                    if (goal && goal.target > 0 && goal.startDate && goal.endDate) {
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        const startDate = new Date(goal.startDate);
+                        const endDate = new Date(goal.endDate);
+                        
+                        const daysRemaining = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)) + 1;
+                        const currentMetrics = calculatePdvMetrics(pdv.id, goal.startDate, goal.endDate);
+                        const remainingValue = goal.target - currentMetrics.revenue;
+                        const dailyTarget = (daysRemaining > 0 && remainingValue > 0) ? remainingValue / daysRemaining : 0;
+                        
+                        const progress = (currentMetrics.revenue / goal.target) * 100;
                         goalProgressHtml = `
                             <p class="text-sm text-gray-300 mb-1">Meta: ${formatCurrency(goal.target)}</p>
                             <div class="w-full bg-gray-700 rounded-full h-2.5">
                                 <div class="bg-orange-500 h-2.5 rounded-full" style="width: ${Math.min(progress, 100)}%"></div>
                             </div>
-                             <p class="text-xs text-gray-400 mt-1">${progress.toFixed(1)}% alcançado. Venda diária necessária: ${formatCurrency(dailyTarget)}</p>
+                             <p class="text-xs text-gray-400 mt-1">${progress.toFixed(1)}% | Restam ${daysRemaining > 0 ? daysRemaining : 0} dias</p>
+                             <p class="text-xs text-orange-400 font-semibold">Venda diária necessária: ${formatCurrency(dailyTarget)}</p>
                         `;
                     }
 
@@ -284,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p class="text-2xl font-bold ${metrics.finalProfit >= 0 ? 'text-green-500' : 'text-red-500'} mt-2">${formatCurrency(metrics.finalProfit)}</p>
                             <p class="text-xs text-gray-400">Lucro final (após custos)</p>
                             <div class="mt-4 pt-4 border-t border-gray-700">
-                                <h4 class="text-sm font-semibold text-orange-400 mb-2">Meta do Mês</h4>
+                                <h4 class="text-sm font-semibold text-orange-400 mb-2">Meta do Período</h4>
                                 ${goalProgressHtml}
                             </div>
                         </div>
@@ -292,13 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).join('') : '<p class="text-gray-400 col-span-full text-center">Nenhum PDV cadastrado ainda.</p>'}
             </div>
         `;
-    
-        mainContent.innerHTML = `
-            <div class="fade-in">
-                ${summaryCards}
-                ${pdvStatusSection}
-            </div>
-        `;
+        mainContent.innerHTML = `<div class="fade-in">${pdvStatusSection}</div>`;
     }
 
     function renderPdvs() {
@@ -309,11 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     + Adicionar PDV
                 </button>
             </div>
-            <div id="pdv-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- PDVs serão listados aqui -->
-            </div>
+            <div id="pdv-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         `;
-    
+        
         const pdvList = document.getElementById('pdv-list');
         if (state.pdvs.length === 0) {
             pdvList.innerHTML = '<p class="text-gray-400 col-span-full text-center">Clique em "Adicionar PDV" para começar.</p>';
@@ -335,8 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="view-pdv-details-btn col-span-2 bg-gray-700 hover:bg-gray-600 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">Detalhes</button>
                         <button class="add-sale-pdv-btn bg-green-600 hover:bg-green-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">+ Venda</button>
                         <button class="restock-pdv-btn bg-blue-600 hover:bg-blue-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">+ Estoque</button>
-                        <button class="edit-pdv-btn bg-yellow-600 hover:bg-yellow-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">Editar</button>
-                        <button class="delete-pdv-btn bg-red-600 hover:bg-red-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">Apagar</button>
                     </div>
                 </div>
             `}).join('');
@@ -346,10 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.view-pdv-details-btn').forEach(btn => btn.addEventListener('click', (e) => showPdvDetails(e.currentTarget.dataset.pdvId)));
         document.querySelectorAll('.add-sale-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showAddSaleModal(e.currentTarget.dataset.pdvId)));
         document.querySelectorAll('.restock-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showRestockModal(e.currentTarget.dataset.pdvId)));
-        document.querySelectorAll('.edit-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showEditPdvModal(e.currentTarget.dataset.pdvId)));
-        document.querySelectorAll('.delete-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => handleDeletePdv(e.currentTarget.dataset.pdvId)));
     }
-    
+
     function renderProducts() {
         mainContent.innerHTML = `
             <div class="flex justify-between items-center mb-6">
@@ -358,9 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     + Adicionar Produto
                 </button>
             </div>
-            <div id="product-list-container">
-                <!-- Conteúdo dos produtos aqui -->
-            </div>
+            <div id="product-list-container"></div>
         `;
 
         const productContainer = document.getElementById('product-list-container');
@@ -373,11 +322,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return sum + (item ? item.quantity : 0);
                 }, 0);
                 const profitPerSale = product.resalePrice - product.currentCost;
-    
                 return { product, totalStock, profitPerSale };
             });
 
-            // Tabela para Desktop
             const desktopTable = `
                 <div class="hidden md:block bg-gray-800 rounded-xl shadow-lg overflow-x-auto">
                     <table class="w-full text-sm text-left text-gray-300">
@@ -416,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Cards para Mobile
             const mobileCards = `
                 <div class="md:hidden space-y-4">
                     ${productItems.map(({ product, totalStock, profitPerSale }) => `
@@ -446,11 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function renderFinances() {
-        // ... (código da função renderFinances inalterado) ...
         mainContent.innerHTML = `
             <h1 class="text-3xl font-bold text-orange-500 mb-6">Financeiro</h1>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Contas a Pagar -->
                 <div>
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-white">Contas a Pagar</h2>
@@ -460,7 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${renderFinanceList(state.accountsPayable, 'payable')}
                     </div>
                 </div>
-                <!-- Contas a Receber -->
                 <div>
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-white">Contas a Receber</h2>
@@ -475,14 +418,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
         document.getElementById('add-payable-btn').addEventListener('click', () => showAddFinanceModal('payable'));
         document.getElementById('add-receivable-btn').addEventListener('click', () => showAddFinanceModal('receivable'));
-        
         document.querySelectorAll('.action-btn-pay').forEach(btn => btn.addEventListener('click', (e) => handlePaymentAction(e.currentTarget.dataset.id, e.currentTarget.dataset.type)));
         document.querySelectorAll('.action-btn-edit').forEach(btn => btn.addEventListener('click', (e) => showEditFinanceModal(e.currentTarget.dataset.id, e.currentTarget.dataset.type)));
         document.querySelectorAll('.action-btn-delete').forEach(btn => btn.addEventListener('click', (e) => handleDeleteFinanceItem(e.currentTarget.dataset.id, e.currentTarget.dataset.type)));
     }
 
     function renderFinanceList(items, type) {
-        // ... (código da função renderFinanceList inalterado) ...
         if (!items || items.length === 0) {
             return '<p class="text-gray-400 text-center py-4">Nenhum lançamento.</p>';
         }
@@ -510,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
                          <p class="font-bold text-lg ${type === 'payable' ? 'text-red-400' : 'text-green-400'}">${formatCurrency(item.amount)}</p>
                         ${!isFullyPaid 
                             ? `<button class="action-btn-pay text-sm font-semibold text-blue-400 hover:text-blue-300" data-id="${item.id}" data-type="${type}">Registrar ${type === 'payable' ? 'Pagamento' : 'Recebimento'}</button>` 
-                            : `<span class="text-sm font-semibold text-gray-500">${type === 'payable' ? 'Pago' : 'Recebido Integralmente'}</span>`
+                            : `<span class="text-sm font-semibold text-gray-500">${type === 'payable' ? 'Pago' : 'Recebido'}</span>`
                         }
                     </div>
                     <div class="flex flex-col space-y-2 ml-4">
@@ -527,44 +468,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCentralCash() {
-        const balance = state.centralCash.transactions.reduce((acc, t) => {
-            if (t.type === 'receivable' || t.type === 'sale') return acc + t.amount;
-            if (t.type === 'withdrawal' || t.type === 'payable') return acc - t.amount;
+        const cashBalance = state.centralCash.transactions.reduce((acc, t) => {
+            if (['sale_pix', 'wallet_deposit', 'receivable_payment'].includes(t.type)) return acc + t.amount;
+            if (['withdrawal', 'payable'].includes(t.type)) return acc - t.amount;
             return acc;
         }, 0);
 
-        const totalStockValueCost = state.pdvs.reduce((sum, pdv) => sum + calculatePdvMetrics(pdv.id).stockValueCost, 0);
-        
-        const totalNetProfitFromSales = state.sales.reduce((sum, sale) => {
-            const profit = sale.totalPrice - (sale.costAtTimeOfSale * sale.quantity);
-            return sum + profit;
-        }, 0);
+        const creditToReceive = state.accountsReceivable
+            .filter(ar => ar.origin === 'sale_credit' && !ar.paid)
+            .reduce((sum, ar) => {
+                const totalPaid = (ar.payments || []).reduce((s, p) => s + p.amount, 0);
+                return sum + (ar.amount - totalPaid);
+            }, 0);
 
         mainContent.innerHTML = `
             <h1 class="text-3xl font-bold text-orange-500 mb-6">Caixa Central</h1>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gray-800 p-6 rounded-xl">
                     <h2 class="text-gray-400 text-sm font-medium">Saldo Disponível em Caixa</h2>
-                    <p class="text-3xl font-bold text-green-500 mt-1">${formatCurrency(balance)}</p>
+                    <p class="text-3xl font-bold text-green-500 mt-1">${formatCurrency(cashBalance)}</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-xl">
-                    <h2 class="text-gray-400 text-sm font-medium">Lucro Líquido (Produtos)</h2>
-                    <p class="text-3xl font-bold text-teal-400 mt-1">${formatCurrency(totalNetProfitFromSales)}</p>
+                    <h2 class="text-gray-400 text-sm font-medium">Saldo em Carteiras (Clientes)</h2>
+                    <p class="text-3xl font-bold text-blue-500 mt-1">${formatCurrency(state.centralCash.walletBalance)}</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-xl">
-                    <h2 class="text-gray-400 text-sm font-medium">Total em Estoque (Custo)</h2>
-                    <p class="text-3xl font-bold text-blue-500 mt-1">${formatCurrency(totalStockValueCost)}</p>
+                    <h2 class="text-gray-400 text-sm font-medium">Crédito a Receber (Faturas)</h2>
+                    <p class="text-3xl font-bold text-yellow-500 mt-1">${formatCurrency(creditToReceive)}</p>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-xl">
+                 <div class="bg-gray-800 p-6 rounded-xl">
                     <h2 class="text-gray-400 text-sm font-medium">Patrimônio Total</h2>
-                    <p class="text-3xl font-bold text-purple-500 mt-1">${formatCurrency(balance + totalStockValueCost)}</p>
+                    <p class="text-3xl font-bold text-purple-500 mt-1">${formatCurrency(cashBalance + creditToReceive)}</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                    <h2 class="text-xl font-bold text-white mb-4">Realizar Retirada Pessoal</h2>
+                <div class="space-y-6">
+                    <form id="wallet-deposit-form" class="bg-gray-800 p-6 rounded-xl space-y-4">
+                        <h2 class="text-xl font-bold text-white">Registrar Depósito em Carteira</h2>
+                        <div>
+                            <label for="wallet-deposit-amount" class="block text-sm font-medium text-gray-300 mb-1">Valor do Depósito</label>
+                            <input type="number" id="wallet-deposit-amount" step="0.01" required class="w-full bg-gray-700 border border-gray-600 rounded-md p-2">
+                        </div>
+                        <div>
+                            <label for="wallet-deposit-reason" class="block text-sm font-medium text-gray-300 mb-1">Cliente/Motivo</label>
+                            <input type="text" id="wallet-deposit-reason" required class="w-full bg-gray-700 border border-gray-600 rounded-md p-2" placeholder="Ex: João Silva, apto 101">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg">Confirmar Depósito</button>
+                    </form>
                     <form id="withdrawal-form" class="bg-gray-800 p-6 rounded-xl space-y-4">
+                        <h2 class="text-xl font-bold text-white">Realizar Retirada Pessoal</h2>
                         <div>
                             <label for="withdrawal-amount" class="block text-sm font-medium text-gray-300 mb-1">Valor</label>
                             <input type="number" id="withdrawal-amount" step="0.01" required class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 focus:ring-orange-500 focus:border-orange-500">
@@ -577,51 +530,46 @@ document.addEventListener('DOMContentLoaded', () => {
                     </form>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-white mb-4">Histórico de Transações do Caixa</h2>
-                    <div class="bg-gray-800 p-4 rounded-xl max-h-80 overflow-y-auto">
-                        <div id="cash-transactions" class="space-y-3">
-                            <!-- transações aqui -->
-                        </div>
+                     <h2 class="text-xl font-bold text-white mb-4">Histórico de Transações do Caixa</h2>
+                     <div class="bg-gray-800 p-4 rounded-xl max-h-[50vh] overflow-y-auto">
+                        <div id="cash-transactions" class="space-y-3"></div>
                     </div>
                 </div>
             </div>
         `;
-    
+        
         const transactionsList = document.getElementById('cash-transactions');
         if (!state.centralCash.transactions || state.centralCash.transactions.length === 0) {
             transactionsList.innerHTML = '<p class="text-gray-400 text-center py-4">Nenhuma transação registrada.</p>';
         } else {
-            const transactionColors = {
-                receivable: 'text-green-400',
-                sale: 'text-green-400',
-                withdrawal: 'text-red-400',
-                payable: 'text-red-400'
-            };
-            const transactionSigns = {
-                receivable: '+',
-                sale: '+',
-                withdrawal: '-',
-                payable: '-'
+            const transactionInfo = {
+                sale_pix: { color: 'text-green-400', sign: '+' },
+                wallet_deposit: { color: 'text-blue-400', sign: '+' },
+                receivable_payment: { color: 'text-teal-400', sign: '+' },
+                withdrawal: { color: 'text-red-400', sign: '-' },
+                payable: { color: 'text-red-400', sign: '-' },
             };
 
             transactionsList.innerHTML = [...state.centralCash.transactions]
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map(t => `
-                <div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-md">
-                    <div>
-                        <p class="font-semibold">${t.reason}</p>
-                        <p class="text-xs text-gray-400">${new Date(t.date).toLocaleString('pt-BR')}</p>
+                .map(t => {
+                    const info = transactionInfo[t.type] || { color: '', sign: '' };
+                    return `
+                    <div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-md">
+                        <div>
+                            <p class="font-semibold">${t.reason}</p>
+                            <p class="text-xs text-gray-400">${new Date(t.date).toLocaleString('pt-BR')}</p>
+                        </div>
+                        <p class="font-bold text-lg ${info.color}">${info.sign}${formatCurrency(t.amount)}</p>
                     </div>
-                    <p class="font-bold text-lg ${transactionColors[t.type] || ''}">${transactionSigns[t.type] || ''}${formatCurrency(t.amount)}</p>
-                </div>
-            `).join('');
+                `}).join('');
         }
     
         document.getElementById('withdrawal-form').addEventListener('submit', handleWithdrawal);
+        document.getElementById('wallet-deposit-form').addEventListener('submit', handleWalletDeposit);
     }
-    
+
     function renderReports() {
-        // ... (código da função renderReports inalterado) ...
         mainContent.innerHTML = `
             <h1 class="text-3xl font-bold text-orange-500 mb-6">Relatórios</h1>
             <div class="bg-gray-800 p-4 rounded-xl mb-6">
@@ -644,126 +592,84 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg">Gerar Relatório</button>
                 </form>
             </div>
-            <div id="report-results">
-                <!-- Resultados do relatório aqui -->
-            </div>
+            <div id="report-results"></div>
         `;
     
         document.getElementById('report-filter-form').addEventListener('submit', handleGenerateReport);
         handleGenerateReport(); 
     }
     
-    // --- FUNÇÕES DE MANIPULAÇÃO DE EVENTOS E MODAIS ---
+    // --- MODAIS E AÇÕES ---
     
+    const handleGenerateReport = (e) => {
+        if(e) e.preventDefault();
+        const pdvId = document.getElementById('report-pdv')?.value || 'all';
+        const startDate = document.getElementById('report-start-date')?.value || null;
+        let endDate = document.getElementById('report-end-date')?.value || null;
+
+        if(!startDate && !endDate){
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('report-start-date').value = today;
+            document.getElementById('report-end-date').value = today;
+            handleGenerateReport();
+            return;
+        }
+
+        const metrics = pdvId === 'all' 
+            ? state.pdvs.reduce((acc, pdv) => {
+                const pdvMetrics = calculatePdvMetrics(pdv.id, startDate, endDate);
+                acc.revenue += pdvMetrics.revenue;
+                acc.netProfit += pdvMetrics.netProfit;
+                acc.salesCount += pdvMetrics.salesCount;
+                return acc;
+              }, { revenue: 0, netProfit: 0, salesCount: 0 })
+            : calculatePdvMetrics(pdvId, startDate, endDate);
+        
+        metrics.avgTicket = metrics.salesCount > 0 ? metrics.revenue / metrics.salesCount : 0;
+        
+        const resultsDiv = document.getElementById('report-results');
+        resultsDiv.innerHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Vendas no Período</p><p class="text-2xl font-bold">${metrics.salesCount}</p></div>
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Ticket Médio</p><p class="text-2xl font-bold">${formatCurrency(metrics.avgTicket)}</p></div>
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Faturamento</p><p class="text-2xl font-bold text-orange-400">${formatCurrency(metrics.revenue)}</p></div>
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Lucro Líquido</p><p class="text-2xl font-bold text-green-400">${formatCurrency(metrics.netProfit)}</p></div>
+            </div>
+        `;
+    };
+
     const showAddPdvModal = () => {
-        // ... (código inalterado) ...
         Swal.fire({
             title: 'Adicionar Novo PDV',
             html: `
                 <input id="pdv-name" class="swal2-input" placeholder="Nome do PDV">
                 <input id="pdv-investment" type="number" step="0.01" class="swal2-input" placeholder="Investimento Inicial">
-                <input id="pdv-fixed-cost-name" class="swal2-input" placeholder="Nome do Custo Fixo (ex: Aluguel)">
-                <input id="pdv-fixed-cost-value" type="number" step="0.01" class="swal2-input" placeholder="Valor do Custo Fixo">
             `,
             confirmButtonText: 'Salvar',
             focusConfirm: false,
             preConfirm: () => {
                 const name = document.getElementById('pdv-name').value;
                 const investment = parseFloat(document.getElementById('pdv-investment').value);
-                const costName = document.getElementById('pdv-fixed-cost-name').value;
-                const costValue = parseFloat(document.getElementById('pdv-fixed-cost-value').value);
-                if (!name || !investment) {
-                    Swal.showValidationMessage(`Por favor, preencha o nome e o investimento.`);
-                }
-                return { name, investment, costName, costValue };
-            }
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const { name, investment, costName, costValue } = result.value;
-                const newPdv = {
-                    id: generateId(),
-                    name,
-                    initialInvestment: investment,
-                    fixedCosts: [],
-                    variableCosts: [],
-                    inventory: []
-                };
-                if(costName && costValue) {
-                    newPdv.fixedCosts.push({ id: generateId(), name: costName, value: costValue });
-                }
-                state.pdvs.push(newPdv);
-                await saveDataToServer();
-                render();
-            }
-        });
-    };
-
-    const showEditPdvModal = (pdvId) => {
-        const pdv = getPdv(pdvId);
-        Swal.fire({
-            title: 'Editar PDV',
-            html: `
-                <input id="pdv-name" class="swal2-input" placeholder="Nome do PDV" value="${pdv.name}">
-                <input id="pdv-investment" type="number" step="0.01" class="swal2-input" placeholder="Investimento Inicial" value="${pdv.initialInvestment}">
-            `,
-            confirmButtonText: 'Salvar Alterações',
-            focusConfirm: false,
-            preConfirm: () => {
-                const name = document.getElementById('pdv-name').value;
-                const investment = parseFloat(document.getElementById('pdv-investment').value);
                 if (!name || isNaN(investment)) {
-                    Swal.showValidationMessage(`Por favor, preencha o nome e um investimento válido.`);
+                    Swal.showValidationMessage(`Por favor, preencha todos os campos.`);
                 }
                 return { name, investment };
             }
         }).then(async (result) => {
             if (result.isConfirmed) {
                 const { name, investment } = result.value;
-                pdv.name = name;
-                pdv.initialInvestment = investment;
+                state.pdvs.push({
+                    id: generateId(), name, initialInvestment: investment,
+                    fixedCosts: [], variableCosts: [], inventory: []
+                });
                 await saveDataToServer();
                 render();
-                Swal.fire('Sucesso!', 'PDV atualizado com sucesso!', 'success');
-            }
-        });
-    };
-
-    const handleDeletePdv = (pdvId) => {
-        const pdv = getPdv(pdvId);
-        Swal.fire({
-            title: 'Você tem certeza?',
-            text: `Isso apagará o PDV "${pdv.name}" e todos os seus dados associados (vendas, estoque, contas, etc.). Esta ação não pode ser desfeita!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sim, apagar tudo!',
-            cancelButtonText: 'Cancelar'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                // Remove the PDV
-                state.pdvs = state.pdvs.filter(p => p.id !== pdvId);
-                // Remove associated data
-                state.sales = state.sales.filter(s => s.pdvId !== pdvId);
-                state.accountsPayable = state.accountsPayable.filter(ap => ap.pdvId !== pdvId);
-                state.accountsReceivable = state.accountsReceivable.filter(ar => ar.pdvId !== pdvId);
-                if (state.goals[pdvId]) {
-                    delete state.goals[pdvId];
-                }
-                
-                await saveDataToServer();
-                render();
-                Swal.fire(
-                    'Apagado!',
-                    `O PDV ${pdv.name} foi removido com sucesso.`,
-                    'success'
-                );
             }
         });
     };
     
     const showAddProductModal = () => {
-         Swal.fire({
+       Swal.fire({
             title: 'Adicionar Novo Produto',
             html: `
                 <input id="product-name" class="swal2-input" placeholder="Nome do Produto">
@@ -785,10 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.isConfirmed) {
                 const { name, cost, resalePrice } = result.value;
                 state.products.push({
-                    id: generateId(),
-                    name,
-                    currentCost: cost,
-                    resalePrice
+                    id: generateId(), name, currentCost: cost, resalePrice
                 });
                 await saveDataToServer();
                 render();
@@ -831,39 +734,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleDeleteProduct = (productId) => {
         const product = getProduct(productId);
-        // Verifica se o produto está em algum inventário
         const isInStock = state.pdvs.some(pdv => 
             pdv.inventory.some(item => item.productId === productId && item.quantity > 0)
         );
 
         if (isInStock) {
-            Swal.fire(
-                'Ação Bloqueada',
-                'Você não pode apagar um produto que ainda possui estoque em um ou mais PDVs. Zere o estoque antes de apagar.',
-                'error'
-            );
+            Swal.fire('Ação Bloqueada','Você não pode apagar um produto que ainda possui estoque.','error');
             return;
         }
 
         Swal.fire({
             title: 'Você tem certeza?',
-            text: `Deseja apagar o produto "${product.name}"? Esta ação não pode ser desfeita.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sim, apagar!',
-            cancelButtonText: 'Cancelar'
+            text: `Deseja apagar o produto "${product.name}"?`,
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33',
+            confirmButtonText: 'Sim, apagar!', cancelButtonText: 'Cancelar'
         }).then(async (result) => {
             if (result.isConfirmed) {
                 state.products = state.products.filter(p => p.id !== productId);
                 await saveDataToServer();
                 render();
-                Swal.fire(
-                    'Apagado!',
-                    'O produto foi removido com sucesso.',
-                    'success'
-                );
+                Swal.fire('Apagado!','O produto foi removido com sucesso.','success');
             }
         });
     };
@@ -883,9 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <select id="restock-product-id" class="swal2-select bg-gray-700 text-gray-100">${productOptions}</select>
                 <input id="restock-quantity" type="number" class="swal2-input" placeholder="Quantidade">
             `,
-            showCancelButton: true,
-            confirmButtonText: 'Próximo',
-            focusConfirm: false,
+            showCancelButton: true, confirmButtonText: 'Próximo',
             preConfirm: () => {
                 const productId = document.getElementById('restock-product-id').value;
                 const quantity = parseInt(document.getElementById('restock-quantity').value);
@@ -901,29 +789,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 Swal.fire({
                     title: `Custo de ${product.name}`,
-                    text: `O último custo registrado para este produto foi ${formatCurrency(product.currentCost)}. O custo da nova compra é o mesmo?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    showDenyButton: true,
-                    confirmButtonText: 'Sim, é o mesmo valor',
-                    denyButtonText: 'Não, quero informar um novo valor',
-                    cancelButtonText: 'Cancelar'
+                    text: `O último custo registrado foi ${formatCurrency(product.currentCost)}. É o mesmo?`,
+                    icon: 'question', showCancelButton: true, showDenyButton: true,
+                    confirmButtonText: 'Sim, mesmo valor', denyButtonText: 'Não, novo valor',
                 }).then(costResult => {
                     if (costResult.isConfirmed) {
                         addStock(pdvId, productId, quantity, product.currentCost);
                     } else if (costResult.isDenied) {
                         Swal.fire({
-                            title: 'Novo Custo',
-                            input: 'number',
-                            inputLabel: `Informe o novo custo unitário para ${product.name}`,
-                            inputAttributes: { step: '0.01' },
-                            showCancelButton: true,
-                            confirmButtonText: 'Salvar Novo Custo',
-                            inputValidator: (value) => {
-                                if (!value || parseFloat(value) <= 0) {
-                                    return 'Você precisa informar um valor de custo válido!'
-                                }
-                            }
+                            title: 'Novo Custo Unitário', input: 'number',
+                            inputAttributes: { step: '0.01' }, showCancelButton: true,
+                            inputValidator: (v) => !v || parseFloat(v) <= 0 ? 'Informe um custo válido' : null
                         }).then(newCostResult => {
                             if (newCostResult.isConfirmed) {
                                 const newCost = parseFloat(newCostResult.value);
@@ -938,7 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const addStock = async (pdvId, productId, quantity, cost) => {
-        // ... (código inalterado) ...
         const pdv = getPdv(pdvId);
         let inventoryItem = pdv.inventory.find(item => item.productId === productId);
         if (inventoryItem) {
@@ -949,10 +824,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const product = getProduct(productId);
         pdv.variableCosts.push({
-            id: generateId(),
-            name: `Compra de ${product.name}`,
-            value: cost * quantity,
-            date: new Date().toISOString()
+            id: generateId(), name: `Compra de ${quantity}x ${product.name}`,
+            value: cost * quantity, date: new Date().toISOString()
         });
         
         await saveDataToServer();
@@ -960,131 +833,63 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
-    const showAddSaleModal = (pdvId) => {
-        const pdv = getPdv(pdvId);
-        if (!pdv.inventory || pdv.inventory.length === 0) {
-            Swal.fire('Estoque Vazio', `O PDV ${pdv.name} não tem produtos no estoque para vender.`, 'warning');
-            return;
-        }
-
-        const productOptions = pdv.inventory.filter(i => i.quantity > 0).map(item => {
-            const product = getProduct(item.productId);
-            return `<option value="${product.id}"> ${product.name} (${item.quantity} em estoque)</option>`;
-        }).join('');
-
-        if (productOptions.trim() === '') {
-             Swal.fire('Estoque Vazio', `O PDV ${pdv.name} não tem produtos com estoque positivo.`, 'warning');
-            return;
-        }
-
-        Swal.fire({
-            title: `Registrar Venda - ${pdv.name}`,
-            html: `
-                <select id="sale-product-id" class="swal2-select">${productOptions}</select>
-                <input id="sale-quantity" type="number" class="swal2-input" placeholder="Quantidade vendida">
-            `,
-            confirmButtonText: 'Registrar',
-            focusConfirm: false,
-            preConfirm: () => {
-                const productId = document.getElementById('sale-product-id').value;
-                const quantity = parseInt(document.getElementById('sale-quantity').value);
-                const inventoryItem = pdv.inventory.find(i => i.productId === productId);
-                
-                if (!productId || !quantity || quantity <= 0) {
-                    Swal.showValidationMessage('Selecione um produto e informe a quantidade.');
-                } else if (quantity > inventoryItem.quantity) {
-                    Swal.showValidationMessage(`Quantidade insuficiente em estoque. Disponível: ${inventoryItem.quantity}`);
-                }
-                return { pdvId, productId, quantity };
-            }
-        }).then(async result => {
-            if (result.isConfirmed) {
-                const { pdvId, productId, quantity } = result.value;
-                const product = getProduct(productId);
-                const pdv = getPdv(pdvId);
-
-                const inventoryItem = pdv.inventory.find(i => i.productId === productId);
-                inventoryItem.quantity -= quantity;
-
-                const newSale = {
-                    id: generateId(),
-                    pdvId,
-                    productId,
-                    quantity,
-                    unitPrice: product.resalePrice,
-                    totalPrice: product.resalePrice * quantity,
-                    costAtTimeOfSale: product.currentCost,
-                    date: new Date().toISOString()
-                };
-                state.sales.push(newSale);
-
-                // Adiciona a venda ao caixa central
-                if (!state.centralCash.transactions) state.centralCash.transactions = [];
-                state.centralCash.transactions.push({
-                    id: generateId(),
-                    type: 'sale',
-                    amount: newSale.totalPrice,
-                    reason: `Venda: ${product.name} (${pdv.name})`,
-                    date: newSale.date
-                });
-
-                await saveDataToServer();
-                Swal.fire('Venda Registrada!', 'O valor da venda foi adicionado ao caixa central.', 'success');
-                render();
-            }
-        });
-    }
-
-    function showPdvDetails(pdvId) {
-        // ... (código da função showPdvDetails inalterado) ...
+    const showPdvDetails = (pdvId) => {
         const pdv = getPdv(pdvId);
         const metrics = calculatePdvMetrics(pdv.id);
     
         const inventoryHtml = pdv.inventory.length > 0 ? pdv.inventory.map(item => {
             const product = getProduct(item.productId);
             if (!product) return '';
-            return `<li class="flex justify-between text-sm py-1"><span>${product.name}</span> <span class="font-mono">${item.quantity} un.</span></li>`;
+            return `<li class="flex justify-between items-center text-sm py-1">
+                        <span>${product.name}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-mono">${item.quantity} un.</span>
+                            <button class="edit-stock-btn text-yellow-400 hover:text-white" data-pdv-id="${pdv.id}" data-product-id="${product.id}" title="Editar Estoque">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                    </li>`;
         }).join('') : '<p class="text-sm text-gray-500">Estoque vazio.</p>';
     
-        const costsHtml = (title, costs) => {
-            return `
-                <h4 class="font-semibold text-orange-400 mt-4 mb-2">${title}</h4>
-                ${costs.length > 0 ? `<ul>${costs.map(c => `
-                    <li class="flex justify-between text-sm py-1"><span>${c.name}</span> <span class="font-semibold">${formatCurrency(c.value)}</span></li>
-                `).join('')}</ul>` : '<p class="text-sm text-gray-500">Nenhum custo registrado.</p>'}
-            `;
-        };
+        const costsHtml = (title, costs) => `
+            <h4 class="font-semibold text-orange-400 mt-4 mb-2">${title}</h4>
+            ${costs.length > 0 ? `<ul>${costs.map(c => `
+                <li class="flex justify-between text-sm py-1"><span>${c.name}</span> <span class="font-semibold">${formatCurrency(c.value)}</span></li>
+            `).join('')}</ul>` : '<p class="text-sm text-gray-500">Nenhum custo.</p>'}`;
+        
+        const currentGoal = state.goals[pdv.id] || {};
     
         Swal.fire({
             title: `Detalhes de ${pdv.name}`,
-            width: '800px',
+            width: '95%',
+            customClass: { popup: 'p-2 sm:p-6' },
             html: `
-                <div class="text-left space-y-6 p-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                <div class="text-left space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-gray-700/50 p-3 rounded-lg">
                             <h3 class="font-bold text-lg text-white">Resumo Financeiro</h3>
-                            <ul class="mt-2 space-y-2 text-sm">
+                            <ul class="mt-2 space-y-1 text-sm">
                                 <li class="flex justify-between"><span>Faturamento:</span> <span class="font-bold text-green-400">${formatCurrency(metrics.revenue)}</span></li>
                                 <li class="flex justify-between"><span>Lucro Líquido:</span> <span class="font-bold text-green-400">${formatCurrency(metrics.netProfit)}</span></li>
                                 <li class="flex justify-between"><span>Custos Totais:</span> <span class="font-bold text-red-400">${formatCurrency(metrics.totalCosts)}</span></li>
                                 <li class="flex justify-between border-t border-gray-600 pt-2 mt-2"><span>Lucro Final:</span> <span class="font-bold text-xl ${metrics.finalProfit >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(metrics.finalProfit)}</span></li>
                             </ul>
                         </div>
-                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                        <div class="bg-gray-700/50 p-3 rounded-lg">
                              <h3 class="font-bold text-lg text-white">Estoque</h3>
-                             <ul class="mt-2 space-y-2 text-sm">
+                             <ul class="mt-2 space-y-1 text-sm">
                                 <li class="flex justify-between"><span>Valor (Custo):</span> <span class="font-bold text-blue-400">${formatCurrency(metrics.stockValueCost)}</span></li>
                                 <li class="flex justify-between"><span>Potencial (Venda):</span> <span class="font-bold text-purple-400">${formatCurrency(metrics.stockValueResale)}</span></li>
                              </ul>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-gray-700/50 p-3 rounded-lg">
                             <h3 class="font-bold text-lg text-white">Inventário Atual</h3>
                             <ul class="mt-2 space-y-1 max-h-40 overflow-y-auto pr-2">${inventoryHtml}</ul>
                         </div>
-                        <div class="bg-gray-700/50 p-4 rounded-lg">
+                        <div class="bg-gray-700/50 p-3 rounded-lg">
                              <h3 class="font-bold text-lg text-white">Custos</h3>
                              ${costsHtml('Fixos', pdv.fixedCosts)}
                              ${costsHtml('Variáveis', pdv.variableCosts)}
@@ -1092,59 +897,91 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     
                     <div>
-                        <h3 class="font-bold text-lg text-white">Definir Meta Mensal</h3>
-                         <div class="flex items-center space-x-2 mt-2">
-                             <input type="number" id="goal-target" step="100" class="swal2-input w-full" placeholder="Valor da Meta" value="${state.goals[pdv.id]?.target || ''}">
-                             <button id="save-goal-btn" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700">Salvar Meta</button>
+                        <h3 class="font-bold text-lg text-white">Definir Meta</h3>
+                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 items-end">
+                            <div><label class="text-xs text-gray-400">Valor</label><input type="number" id="goal-target" class="swal2-input" placeholder="R$ 5000" value="${currentGoal.target || ''}"></div>
+                            <div><label class="text-xs text-gray-400">Início</label><input type="date" id="goal-start-date" class="swal2-input" value="${currentGoal.startDate || ''}"></div>
+                            <div><label class="text-xs text-gray-400">Fim</label><input type="date" id="goal-end-date" class="swal2-input" value="${currentGoal.endDate || ''}"></div>
+                            <button id="save-goal-btn" class="col-span-full sm:col-span-3 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 mt-2">Salvar Meta</button>
                          </div>
                     </div>
                 </div>
             `,
             didOpen: () => {
+                document.querySelectorAll('.edit-stock-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                    const { pdvId, productId } = e.currentTarget.dataset;
+                    showEditStockModal(pdvId, productId);
+                }));
                 document.getElementById('save-goal-btn').addEventListener('click', async () => {
                     const target = parseFloat(document.getElementById('goal-target').value);
-                    if (target && target > 0) {
-                        state.goals[pdv.id] = { target };
+                    const startDate = document.getElementById('goal-start-date').value;
+                    const endDate = document.getElementById('goal-end-date').value;
+                    if (target > 0 && startDate && endDate) {
+                        state.goals[pdv.id] = { target, startDate, endDate };
                         await saveDataToServer();
                         Swal.close();
-                        renderDashboard();
-                        Swal.fire('Meta Salva!', '', 'success');
+                        render();
                     } else {
-                        Swal.showValidationMessage('Informe um valor válido para a meta.');
+                        Swal.showValidationMessage('Preencha todos os campos da meta.');
                     }
                 });
             }
         });
     }
 
-    // --- FUNÇÕES FINANCEIRAS MODIFICADAS ---
+    const showEditStockModal = (pdvId, productId) => {
+        const pdv = getPdv(pdvId);
+        const product = getProduct(productId);
+        const inventoryItem = pdv.inventory.find(i => i.productId === productId) || { quantity: 0 };
+        
+        Swal.fire({
+            title: `Editar Estoque de ${product.name}`, text: `PDV: ${pdv.name}`,
+            input: 'number', inputValue: inventoryItem.quantity,
+            confirmButtonText: 'Salvar', showCancelButton: true,
+            inputValidator: (value) => {
+                if (value === '' || parseInt(value) < 0) return 'Insira uma quantidade válida.';
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const item = pdv.inventory.find(i => i.productId === productId);
+                if (item) {
+                    item.quantity = parseInt(result.value);
+                } else {
+                    pdv.inventory.push({ productId, quantity: parseInt(result.value) });
+                }
+                await saveDataToServer();
+                Swal.fire('Sucesso!', 'Estoque atualizado.', 'success').then(() => {
+                    if (document.querySelector('.swal2-container')) showPdvDetails(pdvId);
+                    else render();
+                });
+            }
+        });
+    }
 
     function showAddFinanceModal(type, item = null) {
-        // ... (código inalterado) ...
         const title = `${item ? 'Editar' : 'Nova'} ${type === 'payable' ? 'Conta a Pagar' : 'Conta a Receber'}`;
         const pdvOptions = state.pdvs.map(p => `<option value="${p.id}" ${item?.pdvId === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
 
         let recurringHtml = '';
-        if (type === 'receivable') {
-            recurringHtml = `
+        if ((type === 'receivable' && item?.origin !== 'sale_credit') || type === 'payable') {
+             recurringHtml = `
                 <div class="flex items-center justify-center mt-4">
-                    <input id="finance-recurring" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" ${item?.isRecurring ? 'checked' : ''}>
+                    <input id="finance-recurring" type="checkbox" class="h-4 w-4 rounded text-orange-600 focus:ring-orange-500" ${item?.isRecurring ? 'checked' : ''}>
                     <label for="finance-recurring" class="ml-2 block text-sm text-gray-300">Renovação Automática Mensal</label>
                 </div>
             `;
         }
-
+        
         Swal.fire({
             title,
             html: `
-                <input id="finance-description" class="swal2-input" placeholder="Descrição (ex: Conta de Luz)" value="${item?.description || ''}">
+                <input id="finance-description" class="swal2-input" placeholder="Descrição" value="${item?.description || ''}">
                 <input id="finance-amount" type="number" step="0.01" class="swal2-input" placeholder="Valor" value="${item?.amount || ''}">
                 <input id="finance-due-date" type="date" class="swal2-input" value="${item ? new Date(item.dueDate).toISOString().split('T')[0] : ''}">
-                <select id="finance-pdv-id" class="swal2-select">${pdvOptions}</select>
+                <select id="finance-pdv-id" class="swal2-select bg-gray-700 text-gray-100">${pdvOptions}</select>
                 ${recurringHtml}
             `,
             confirmButtonText: 'Salvar',
-            focusConfirm: false,
             preConfirm: () => {
                 const description = document.getElementById('finance-description').value;
                 const amount = parseFloat(document.getElementById('finance-amount').value);
@@ -1165,17 +1002,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const existingItem = list.find(i => i.id === item.id);
                     Object.assign(existingItem, data);
                 } else {
-                    const newItem = {
-                        id: generateId(),
-                        ...data,
-                        paid: false,
-                        payments: []
-                    };
-                    if (type === 'payable') {
-                        state.accountsPayable.push(newItem);
-                    } else {
-                        state.accountsReceivable.push(newItem);
-                    }
+                    const list = type === 'payable' ? state.accountsPayable : state.accountsReceivable;
+                    list.push({ id: generateId(), ...data, paid: false, payments: [] });
                 }
                 await saveDataToServer();
                 render();
@@ -1183,180 +1011,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function showEditFinanceModal(id, type) {
-        // ... (código inalterado) ...
+    const showEditFinanceModal = (id, type) => {
         const list = type === 'payable' ? state.accountsPayable : state.accountsReceivable;
         const item = list.find(i => i.id === id);
-        if (item) {
-            showAddFinanceModal(type, item);
-        }
+        if (item) showAddFinanceModal(type, item);
     }
-
+    
     const handleDeleteFinanceItem = async (id, type) => {
-        // ... (código inalterado) ...
         const list = type === 'payable' ? state.accountsPayable : state.accountsReceivable;
         const item = list.find(i => i.id === id);
-
         Swal.fire({
-            title: 'Você tem certeza?',
-            text: `Deseja apagar "${item.description}"? Esta ação não pode ser desfeita.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sim, apagar!',
-            cancelButtonText: 'Cancelar'
+            title: 'Você tem certeza?', text: `Deseja apagar "${item.description}"?`,
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33',
+            confirmButtonText: 'Sim, apagar!', cancelButtonText: 'Cancelar'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                if (type === 'payable') {
-                    state.accountsPayable = state.accountsPayable.filter(i => i.id !== id);
-                } else {
-                    state.accountsReceivable = state.accountsReceivable.filter(i => i.id !== id);
-                }
+                if (type === 'payable') state.accountsPayable = state.accountsPayable.filter(i => i.id !== id);
+                else state.accountsReceivable = state.accountsReceivable.filter(i => i.id !== id);
                 await saveDataToServer();
                 render();
                 Swal.fire('Apagado!', 'O lançamento foi removido.', 'success');
             }
         });
     }
-    
-    const handlePaymentAction = async (id, type) => {
-        // ... (código inalterado) ...
-        if (type === 'payable') {
-            const item = state.accountsPayable.find(i => i.id === id);
-            if (!item || item.paid) return;
-            item.paid = true;
-            state.centralCash.transactions.push({
-                id: generateId(),
-                type: 'payable',
-                amount: item.amount,
-                reason: `Pagamento: ${item.description} (${getPdv(item.pdvId).name})`,
-                date: new Date().toISOString()
-            });
-            Swal.fire('Sucesso!', 'Conta marcada como paga e valor debitado do caixa central.', 'success');
-        } else {
-            const item = state.accountsReceivable.find(i => i.id === id);
-            if (!item || item.paid) return;
-            const totalPaid = (item.payments || []).reduce((sum, p) => sum + p.amount, 0);
-            const remaining = item.amount - totalPaid;
-            const { value: paymentAmount } = await Swal.fire({
-                title: 'Registrar Recebimento',
-                text: `Valor total: ${formatCurrency(item.amount)}. Restante: ${formatCurrency(remaining)}`,
-                input: 'number',
-                inputValue: remaining.toFixed(2),
-                inputAttributes: { step: '0.01' },
-                showCancelButton: true,
-                confirmButtonText: 'Registrar',
-                cancelButtonText: 'Cancelar',
-                inputValidator: (value) => {
-                    if (!value || parseFloat(value) <= 0 || parseFloat(value) > remaining) {
-                        return `Por favor, insira um valor válido (maior que zero e menor ou igual a ${formatCurrency(remaining)})`;
-                    }
-                }
-            });
-            if (paymentAmount) {
-                const receivedAmount = parseFloat(paymentAmount);
-                if (!item.payments) item.payments = [];
-                item.payments.push({
-                    amount: receivedAmount,
-                    date: new Date().toISOString()
-                });
-                state.centralCash.transactions.push({
-                    id: generateId(),
-                    type: 'receivable',
-                    amount: receivedAmount,
-                    reason: `Recebimento: ${item.description} (${getPdv(item.pdvId).name})`,
-                    date: new Date().toISOString()
-                });
-                const newTotalPaid = totalPaid + receivedAmount;
-                if (newTotalPaid >= item.amount) {
-                    item.paid = true;
-                    if (item.isRecurring) {
-                        renewReceivable(item);
-                    }
-                }
-                Swal.fire('Sucesso!', 'Recebimento registrado e valor creditado no caixa central.', 'success');
-            }
-        }
-        await saveDataToServer();
-        render();
-    };
 
-    const renewReceivable = (item) => {
-        // ... (código inalterado) ...
-        const dueDate = new Date(item.dueDate);
-        dueDate.setMonth(dueDate.getMonth() + 1);
-        const newItem = {
-            ...item,
-            id: generateId(),
-            dueDate: dueDate.toISOString(),
-            paid: false,
-            payments: []
-        };
-        state.accountsReceivable.push(newItem);
-    };
 
-    const handleWithdrawal = async (e) => {
-        // ... (código inalterado) ...
-        e.preventDefault();
-        const amount = parseFloat(document.getElementById('withdrawal-amount').value);
-        const reason = document.getElementById('withdrawal-reason').value;
-
-        if (amount > 0 && reason) {
-            state.centralCash.transactions.push({
-                id: generateId(),
-                type: 'withdrawal',
-                amount,
-                reason,
-                date: new Date().toISOString()
-            });
-            await saveDataToServer();
-            render();
-            document.getElementById('withdrawal-form').reset();
-        } else {
-            Swal.fire('Erro', 'Preencha o valor e o motivo da retirada.', 'error');
-        }
-    };
-
-    const handleGenerateReport = (e) => {
-        // ... (código inalterado) ...
-        if(e) e.preventDefault();
-        const pdvId = document.getElementById('report-pdv')?.value || 'all';
-        const startDate = document.getElementById('report-start-date')?.value || null;
-        let endDate = document.getElementById('report-end-date')?.value || null;
-
-        if(!startDate && !endDate){
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('report-start-date').value = today;
-            document.getElementById('report-end-date').value = today;
-            handleGenerateReport();
-            return;
-        }
-
-        const metrics = pdvId === 'all' 
-            ? state.pdvs.reduce((acc, pdv) => {
-                const pdvMetrics = calculatePdvMetrics(pdv.id, startDate, endDate);
-                acc.revenue += pdvMetrics.revenue;
-                acc.netProfit += pdvMetrics.netProfit;
-                acc.salesCount += pdvMetrics.salesCount;
-                return acc;
-              }, { revenue: 0, netProfit: 0, salesCount: 0 })
-            : calculatePdvMetrics(pdvId, startDate, endDate);
-        
-        metrics.avgTicket = metrics.salesCount > 0 ? metrics.revenue / metrics.salesCount : 0;
-        
-        const resultsDiv = document.getElementById('report-results');
-        resultsDiv.innerHTML = `
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Vendas no Período</p><p class="text-2xl font-bold">${metrics.salesCount}</p></div>
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Ticket Médio</p><p class="text-2xl font-bold">${formatCurrency(metrics.avgTicket)}</p></div>
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Faturamento</p><p class="text-2xl font-bold text-orange-400">${formatCurrency(metrics.revenue)}</p></div>
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Lucro Líquido</p><p class="text-2xl font-bold text-green-400">${formatCurrency(metrics.netProfit)}</p></div>
-            </div>
-        `;
-    };
-
-    // --- INICIALIZAÇÃO DA APLICAÇÃO ---
+    // --- INICIALIZAÇÃO ---
     const initApp = async () => {
         loginScreen.style.display = 'none';
         appContent.style.display = 'block';
@@ -1366,9 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     loginForm.addEventListener('submit', handleLogin);
     logoutButton.addEventListener('click', handleLogout);
-    menuToggle.addEventListener('click', () => {
-        mobileMenu.classList.toggle('hidden');
-    });
+    menuToggle.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
 
     if (checkAuth()) {
         initApp();
