@@ -1,81 +1,84 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 const DB_PATH = path.join(__dirname, 'db.json');
 
-// Middleware para servir arquivos estáticos da pasta 'public'
-app.use(express.static('public'));
-// Middleware para parsear JSON no corpo das requisições
+// Middleware para parsear JSON
 app.use(express.json());
 
-// --- Funções Auxiliares do "Banco de Dados" ---
+// Servir arquivos estáticos da pasta 'public'
+app.use(express.static('public'));
 
-const readDB = () => {
-    try {
-        if (fs.existsSync(DB_PATH)) {
-            const data = fs.readFileSync(DB_PATH, 'utf8');
-            return JSON.parse(data);
-        }
-    } catch (error) {
-        console.error("Erro ao ler o banco de dados:", error);
-    }
-    // Se o arquivo não existir ou estiver vazio/corrompido, retorna o estado inicial
-    return {
-        pdvs: [],
-        products: [],
-        sales: [],
-        accountsPayable: [],
-        accountsReceivable: [],
-        centralCash: {
-            balance: 0,
-            transactions: [],
-        },
-        goals: {},
-    };
+// --- Estado Inicial do Banco de Dados ---
+const initialState = {
+    pdvs: [],
+    products: [],
+    sales: [],
+    accountsPayable: [],
+    accountsReceivable: [],
+    goals: {},
+    centralCash: {
+        walletBalance: 0, // NOVO: Saldo total que os clientes têm em carteira
+        transactions: []
+    },
+    activeView: 'dashboard'
 };
 
-const writeDB = (data) => {
+// --- Funções do "Banco de Dados" (db.json) ---
+const readDb = () => {
+    if (!fs.existsSync(DB_PATH)) {
+        fs.writeFileSync(DB_PATH, JSON.stringify(initialState, null, 2));
+        return initialState;
+    }
     try {
-        fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+        const data = fs.readFileSync(DB_PATH, 'utf8');
+        return JSON.parse(data);
     } catch (error) {
-        console.error("Erro ao escrever no banco de dados:", error);
+        console.error("Erro ao ler db.json, restaurando para o estado inicial:", error);
+        fs.writeFileSync(DB_PATH, JSON.stringify(initialState, null, 2));
+        return initialState;
     }
 };
 
-// --- API Endpoints ---
+const writeDb = (data) => {
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+};
 
-// Endpoint de Login
+// --- Rotas da API ---
+
+// Rota de Login (simples, para fins de demonstração)
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     if (username === 'admin' && password === 'smart@20252025') {
-        res.status(200).json({ success: true, message: 'Login bem-sucedido' });
+        res.status(200).send({ message: 'Login bem-sucedido' });
     } else {
-        res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+        res.status(401).send({ message: 'Credenciais inválidas' });
     }
 });
 
-// Endpoint para buscar todos os dados
+// Rota para obter todos os dados
 app.get('/api/data', (req, res) => {
-    const data = readDB();
+    const data = readDb();
     res.json(data);
 });
 
-// Endpoint para salvar todos os dados
+// Rota para salvar todos os dados
 app.post('/api/data', (req, res) => {
-    const newData = req.body;
-    writeDB(newData);
-    res.status(200).json({ success: true, message: 'Dados salvos com sucesso' });
+    const data = req.body;
+    writeDb(data);
+    res.status(200).send({ message: 'Dados salvos com sucesso' });
 });
 
-// Rota principal que serve o index.html
-app.get('/', (req, res) => {
+// Rota de fallback para servir o index.html (para single page applications)
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Inicia o servidor
+// Iniciar o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
