@@ -302,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPdvs() {
-        // ... (código da função renderPdvs inalterado) ...
         mainContent.innerHTML = `
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-orange-500">Pontos de Venda (PDVs)</h1>
@@ -332,23 +331,26 @@ document.addEventListener('DOMContentLoaded', () => {
                              <p class="text-sm flex justify-between"><span>Potencial Venda:</span> <span class="font-semibold text-purple-400">${formatCurrency(metrics.stockValueResale)}</span></p>
                         </div>
                     </div>
-                    <div class="mt-4 pt-4 border-t border-gray-700 flex space-x-2">
-                        <button class="view-pdv-details-btn flex-1 bg-gray-700 hover:bg-gray-600 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">Detalhes</button>
-                        <button class="add-sale-pdv-btn flex-1 bg-green-600 hover:bg-green-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">+ Venda</button>
-                        <button class="restock-pdv-btn flex-1 bg-blue-600 hover:bg-blue-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">+ Estoque</button>
+                    <div class="mt-4 pt-4 border-t border-gray-700 grid grid-cols-2 gap-2 text-white">
+                        <button class="view-pdv-details-btn col-span-2 bg-gray-700 hover:bg-gray-600 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">Detalhes</button>
+                        <button class="add-sale-pdv-btn bg-green-600 hover:bg-green-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">+ Venda</button>
+                        <button class="restock-pdv-btn bg-blue-600 hover:bg-blue-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">+ Estoque</button>
+                        <button class="edit-pdv-btn bg-yellow-600 hover:bg-yellow-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">Editar</button>
+                        <button class="delete-pdv-btn bg-red-600 hover:bg-red-700 text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-pdv-id="${pdv.id}">Apagar</button>
                     </div>
                 </div>
             `}).join('');
         }
     
         document.getElementById('add-pdv-btn').addEventListener('click', showAddPdvModal);
-        document.querySelectorAll('.view-pdv-details-btn').forEach(btn => btn.addEventListener('click', (e) => showPdvDetails(e.target.dataset.pdvId)));
-        document.querySelectorAll('.add-sale-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showAddSaleModal(e.target.dataset.pdvId)));
-        document.querySelectorAll('.restock-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showRestockModal(e.target.dataset.pdvId)));
+        document.querySelectorAll('.view-pdv-details-btn').forEach(btn => btn.addEventListener('click', (e) => showPdvDetails(e.currentTarget.dataset.pdvId)));
+        document.querySelectorAll('.add-sale-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showAddSaleModal(e.currentTarget.dataset.pdvId)));
+        document.querySelectorAll('.restock-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showRestockModal(e.currentTarget.dataset.pdvId)));
+        document.querySelectorAll('.edit-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => showEditPdvModal(e.currentTarget.dataset.pdvId)));
+        document.querySelectorAll('.delete-pdv-btn').forEach(btn => btn.addEventListener('click', (e) => handleDeletePdv(e.currentTarget.dataset.pdvId)));
     }
     
     function renderProducts() {
-        // ... (código da função renderProducts inalterado) ...
         mainContent.innerHTML = `
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-orange-500">Produtos</h1>
@@ -356,48 +358,91 @@ document.addEventListener('DOMContentLoaded', () => {
                     + Adicionar Produto
                 </button>
             </div>
-            <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                <table class="w-full text-sm text-left text-gray-300">
-                    <thead class="text-xs text-gray-400 uppercase bg-gray-700">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Produto</th>
-                            <th scope="col" class="px-6 py-3">Custo Atual</th>
-                            <th scope="col" class="px-6 py-3">Preço de Venda</th>
-                            <th scope="col" class="px-6 py-3">Lucro por Venda</th>
-                            <th scope="col" class="px-6 py-3">Estoque Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="product-table-body">
-                        <!-- Linhas da tabela serão inseridas aqui -->
-                    </tbody>
-                </table>
+            <div id="product-list-container">
+                <!-- Conteúdo dos produtos aqui -->
             </div>
         `;
-    
-        const tableBody = document.getElementById('product-table-body');
+
+        const productContainer = document.getElementById('product-list-container');
         if (state.products.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">Nenhum produto cadastrado.</td></tr>';
+            productContainer.innerHTML = '<p class="text-gray-400 text-center py-8">Nenhum produto cadastrado.</p>';
         } else {
-            tableBody.innerHTML = state.products.map(product => {
+            const productItems = state.products.map(product => {
                 const totalStock = state.pdvs.reduce((sum, pdv) => {
                     const item = pdv.inventory.find(i => i.productId === product.id);
                     return sum + (item ? item.quantity : 0);
                 }, 0);
                 const profitPerSale = product.resalePrice - product.currentCost;
     
-                return `
-                    <tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
-                        <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">${product.name}</th>
-                        <td class="px-6 py-4">${formatCurrency(product.currentCost)}</td>
-                        <td class="px-6 py-4">${formatCurrency(product.resalePrice)}</td>
-                        <td class="px-6 py-4 text-green-400">${formatCurrency(profitPerSale)}</td>
-                        <td class="px-6 py-4">${totalStock} unidades</td>
-                    </tr>
-                `;
-            }).join('');
+                return { product, totalStock, profitPerSale };
+            });
+
+            // Tabela para Desktop
+            const desktopTable = `
+                <div class="hidden md:block bg-gray-800 rounded-xl shadow-lg overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-300">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Produto</th>
+                                <th scope="col" class="px-6 py-3">Custo Atual</th>
+                                <th scope="col" class="px-6 py-3">Preço de Venda</th>
+                                <th scope="col" class="px-6 py-3">Lucro por Venda</th>
+                                <th scope="col" class="px-6 py-3">Estoque Total</th>
+                                <th scope="col" class="px-6 py-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productItems.map(({ product, totalStock, profitPerSale }) => `
+                                <tr class="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
+                                    <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">${product.name}</th>
+                                    <td class="px-6 py-4">${formatCurrency(product.currentCost)}</td>
+                                    <td class="px-6 py-4">${formatCurrency(product.resalePrice)}</td>
+                                    <td class="px-6 py-4 text-green-400">${formatCurrency(profitPerSale)}</td>
+                                    <td class="px-6 py-4">${totalStock} un.</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex justify-center space-x-2">
+                                            <button class="edit-product-btn text-yellow-400 hover:text-yellow-300" data-product-id="${product.id}" title="Editar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                                            </button>
+                                            <button class="delete-product-btn text-red-500 hover:text-red-400" data-product-id="${product.id}" title="Apagar">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Cards para Mobile
+            const mobileCards = `
+                <div class="md:hidden space-y-4">
+                    ${productItems.map(({ product, totalStock, profitPerSale }) => `
+                        <div class="bg-gray-800 p-4 rounded-xl shadow-lg">
+                            <h3 class="font-bold text-lg text-white">${product.name}</h3>
+                            <div class="mt-2 space-y-1 text-sm text-gray-300 border-t border-gray-700 pt-2">
+                                <p class="flex justify-between"><span>Custo Atual:</span> <span class="font-semibold">${formatCurrency(product.currentCost)}</span></p>
+                                <p class="flex justify-between"><span>Preço de Venda:</span> <span class="font-semibold">${formatCurrency(product.resalePrice)}</span></p>
+                                <p class="flex justify-between"><span>Lucro por Venda:</span> <span class="font-semibold text-green-400">${formatCurrency(profitPerSale)}</span></p>
+                                <p class="flex justify-between"><span>Estoque Total:</span> <span class="font-semibold">${totalStock} unidades</span></p>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-gray-700 flex space-x-2">
+                                <button class="edit-product-btn flex-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-product-id="${product.id}">Editar</button>
+                                <button class="delete-product-btn flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors" data-product-id="${product.id}">Apagar</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            productContainer.innerHTML = desktopTable + mobileCards;
         }
     
         document.getElementById('add-product-btn').addEventListener('click', showAddProductModal);
+        document.querySelectorAll('.edit-product-btn').forEach(btn => btn.addEventListener('click', (e) => showEditProductModal(e.currentTarget.dataset.productId)));
+        document.querySelectorAll('.delete-product-btn').forEach(btn => btn.addEventListener('click', (e) => handleDeleteProduct(e.currentTarget.dataset.productId)));
     }
     
     function renderFinances() {
@@ -652,9 +697,72 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
+
+    const showEditPdvModal = (pdvId) => {
+        const pdv = getPdv(pdvId);
+        Swal.fire({
+            title: 'Editar PDV',
+            html: `
+                <input id="pdv-name" class="swal2-input" placeholder="Nome do PDV" value="${pdv.name}">
+                <input id="pdv-investment" type="number" step="0.01" class="swal2-input" placeholder="Investimento Inicial" value="${pdv.initialInvestment}">
+            `,
+            confirmButtonText: 'Salvar Alterações',
+            focusConfirm: false,
+            preConfirm: () => {
+                const name = document.getElementById('pdv-name').value;
+                const investment = parseFloat(document.getElementById('pdv-investment').value);
+                if (!name || isNaN(investment)) {
+                    Swal.showValidationMessage(`Por favor, preencha o nome e um investimento válido.`);
+                }
+                return { name, investment };
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const { name, investment } = result.value;
+                pdv.name = name;
+                pdv.initialInvestment = investment;
+                await saveDataToServer();
+                render();
+                Swal.fire('Sucesso!', 'PDV atualizado com sucesso!', 'success');
+            }
+        });
+    };
+
+    const handleDeletePdv = (pdvId) => {
+        const pdv = getPdv(pdvId);
+        Swal.fire({
+            title: 'Você tem certeza?',
+            text: `Isso apagará o PDV "${pdv.name}" e todos os seus dados associados (vendas, estoque, contas, etc.). Esta ação não pode ser desfeita!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sim, apagar tudo!',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Remove the PDV
+                state.pdvs = state.pdvs.filter(p => p.id !== pdvId);
+                // Remove associated data
+                state.sales = state.sales.filter(s => s.pdvId !== pdvId);
+                state.accountsPayable = state.accountsPayable.filter(ap => ap.pdvId !== pdvId);
+                state.accountsReceivable = state.accountsReceivable.filter(ar => ar.pdvId !== pdvId);
+                if (state.goals[pdvId]) {
+                    delete state.goals[pdvId];
+                }
+                
+                await saveDataToServer();
+                render();
+                Swal.fire(
+                    'Apagado!',
+                    `O PDV ${pdv.name} foi removido com sucesso.`,
+                    'success'
+                );
+            }
+        });
+    };
     
     const showAddProductModal = () => {
-        // ... (código inalterado) ...
          Swal.fire({
             title: 'Adicionar Novo Produto',
             html: `
@@ -668,8 +776,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = document.getElementById('product-name').value;
                 const cost = parseFloat(document.getElementById('product-cost').value);
                 const resalePrice = parseFloat(document.getElementById('product-resale').value);
-                if (!name || !cost || !resalePrice) {
-                    Swal.showValidationMessage(`Preencha todos os campos.`);
+                if (!name || isNaN(cost) || isNaN(resalePrice)) {
+                    Swal.showValidationMessage(`Preencha todos os campos com valores válidos.`);
                 }
                 return { name, cost, resalePrice };
             }
@@ -686,10 +794,81 @@ document.addEventListener('DOMContentLoaded', () => {
                 render();
             }
         });
-    }
+    };
+
+    const showEditProductModal = (productId) => {
+        const product = getProduct(productId);
+        Swal.fire({
+            title: 'Editar Produto',
+            html: `
+                <input id="product-name" class="swal2-input" placeholder="Nome do Produto" value="${product.name}">
+                <input id="product-cost" type="number" step="0.01" class="swal2-input" placeholder="Custo do Produto" value="${product.currentCost}">
+                <input id="product-resale" type="number" step="0.01" class="swal2-input" placeholder="Preço de Venda" value="${product.resalePrice}">
+            `,
+            confirmButtonText: 'Salvar Alterações',
+            focusConfirm: false,
+            preConfirm: () => {
+                const name = document.getElementById('product-name').value;
+                const cost = parseFloat(document.getElementById('product-cost').value);
+                const resalePrice = parseFloat(document.getElementById('product-resale').value);
+                if (!name || isNaN(cost) || isNaN(resalePrice)) {
+                    Swal.showValidationMessage(`Preencha todos os campos com valores válidos.`);
+                }
+                return { name, cost, resalePrice };
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const { name, cost, resalePrice } = result.value;
+                product.name = name;
+                product.currentCost = cost;
+                product.resalePrice = resalePrice;
+                await saveDataToServer();
+                render();
+                Swal.fire('Sucesso!', 'Produto atualizado com sucesso!', 'success');
+            }
+        });
+    };
+
+    const handleDeleteProduct = (productId) => {
+        const product = getProduct(productId);
+        // Verifica se o produto está em algum inventário
+        const isInStock = state.pdvs.some(pdv => 
+            pdv.inventory.some(item => item.productId === productId && item.quantity > 0)
+        );
+
+        if (isInStock) {
+            Swal.fire(
+                'Ação Bloqueada',
+                'Você não pode apagar um produto que ainda possui estoque em um ou mais PDVs. Zere o estoque antes de apagar.',
+                'error'
+            );
+            return;
+        }
+
+        Swal.fire({
+            title: 'Você tem certeza?',
+            text: `Deseja apagar o produto "${product.name}"? Esta ação não pode ser desfeita.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sim, apagar!',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                state.products = state.products.filter(p => p.id !== productId);
+                await saveDataToServer();
+                render();
+                Swal.fire(
+                    'Apagado!',
+                    'O produto foi removido com sucesso.',
+                    'success'
+                );
+            }
+        });
+    };
 
     const showRestockModal = (pdvId) => {
-        // ... (código inalterado) ...
         const pdv = getPdv(pdvId);
         if (state.products.length === 0) {
             Swal.fire('Atenção', 'Cadastre produtos antes de reabastecer o estoque.', 'warning');
