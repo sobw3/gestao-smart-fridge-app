@@ -303,9 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderProducts() {
         mainContent.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h1 class="text-3xl font-bold text-orange-500">Produtos</h1>
-                <button id="add-product-btn" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                <button id="add-product-btn" class="w-full md:w-auto bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     + Adicionar Produto
                 </button>
             </div>
@@ -1035,6 +1035,148 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const handlePaymentAction = async (id, type) => {
+        if (type === 'payable') {
+            const item = state.accountsPayable.find(i => i.id === id);
+            item.paid = true;
+            state.centralCash.transactions.push({
+                id: generateId(), type: 'payable', amount: item.amount,
+                reason: `Pagamento: ${item.description}`, date: new Date().toISOString()
+            });
+            if (item.isRecurring) {
+                const dueDate = new Date(item.dueDate);
+                dueDate.setMonth(dueDate.getMonth() + 1);
+                state.accountsPayable.push({ ...item, id: generateId(), dueDate: dueDate.toISOString(), paid: false });
+            }
+        } else { // receivable
+            const item = state.accountsReceivable.find(i => i.id === id);
+            const totalPaid = (item.payments || []).reduce((sum, p) => sum + p.amount, 0);
+            const remaining = item.amount - totalPaid;
+            const { value: paymentAmount } = await Swal.fire({
+                title: 'Registrar Recebimento', text: `Restante: ${formatCurrency(remaining)}`,
+                input: 'number', inputValue: remaining.toFixed(2),
+                inputAttributes: { step: '0.01' }, showCancelButton: true, confirmButtonText: 'Registrar',
+                inputValidator: (value) => {
+                    if (!value || parseFloat(value) <= 0 || parseFloat(value) > remaining + 0.001) {
+                        return `Insira um valor válido (menor ou igual a ${formatCurrency(remaining)})`;
+                    }
+                }
+            });
+
+            if (paymentAmount) {
+                const receivedAmount = parseFloat(paymentAmount);
+                if (!item.payments) item.payments = [];
+                item.payments.push({ amount: receivedAmount, date: new Date().toISOString() });
+                
+                state.centralCash.transactions.push({
+                    id: generateId(), type: 'receivable_payment', amount: receivedAmount,
+                    reason: `Recebimento: ${item.description}`, date: new Date().toISOString()
+                });
+
+                if ((totalPaid + receivedAmount) >= item.amount) {
+                    item.paid = true;
+                    if (item.isRecurring && item.origin !== 'sale_credit') {
+                         const dueDate = new Date(item.dueDate);
+                         dueDate.setMonth(dueDate.getMonth() + 1);
+                         state.accountsReceivable.push({ ...item, id: generateId(), dueDate: dueDate.toISOString(), paid: false, payments: [] });
+                    }
+                }
+            }
+        }
+        await saveDataToServer();
+        render();
+    };
+
+    const handleSale = async ({ pdvId, productId, quantity, paymentMethod }) => {
+        const product = getProduct(productId);
+        const pdv = getPdv(pdvId);
+        const totalPrice = product.resalePrice * quantity;
+
+        const inventoryItem = pdv.inventory.find(i => i.productId === productId);
+        inventoryItem.quantity -= quantity;
+
+        const newSale = {
+            id: generateId(), pdvId, productId, quantity, totalPrice, paymentMethod,
+            costAtTimeOfSale: product.currentCost, date: new Date().toISOString()
+        };
+        state.sales.push(newSale);
+
+        let successMessage = 'Venda registrada!';
+
+        switch (paymentMethod) {
+            case 'pix':
+                state.centralCash.transactions.push({
+                    id: generateId(), type: 'sale_pix', amount: totalPrice,
+                    reason: `Venda Pix: ${product.name} (${pdv.name})`, date: newSale.date
+                });
+                successMessage = 'Venda registrada e valor adicionado ao caixa!';
+                break;
+
+            case 'wallet':
+                if (state.centralCash.walletBalance < totalPrice) {
+                    Swal.fire('Saldo Insuficiente', 'O saldo em carteiras é menor que o valor da venda.', 'error');
+                    inventoryItem.quantity += quantity; 
+                    state.sales.pop();
+                    return;
+                }
+                state.centralCash.walletBalance -= totalPrice;
+                successMessage = 'Venda registrada e debitada do saldo de carteiras!';
+                break;
+
+            case 'credit':
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + 30);
+                state.accountsReceivable.push({
+                    id: generateId(), pdvId, description: `Fatura: ${quantity}x ${product.name}`,
+                    amount: totalPrice, dueDate: dueDate.toISOString(), paid: false,
+                    isRecurring: false, origin: 'sale_credit', payments: []
+                });
+                successMessage = 'Venda registrada e fatura criada em Contas a Receber!';
+                break;
+        }
+
+        await saveDataToServer();
+        Swal.fire('Sucesso!', successMessage, 'success');
+        render();
+    };
+
+    const handleWalletDeposit = async (e) => {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById('wallet-deposit-amount').value);
+        const reason = document.getElementById('wallet-deposit-reason').value;
+
+        if (amount > 0 && reason) {
+            state.centralCash.walletBalance += amount;
+            state.centralCash.transactions.push({
+                id: generateId(), type: 'wallet_deposit', amount,
+                reason: `Depósito Carteira: ${reason}`, date: new Date().toISOString()
+            });
+            await saveDataToServer();
+            render();
+            document.getElementById('wallet-deposit-form').reset();
+            Swal.fire('Sucesso!', 'Depósito registrado no caixa e no saldo de carteiras.', 'success');
+        } else {
+            Swal.fire('Erro', 'Preencha o valor e o motivo do depósito.', 'error');
+        }
+    };
+    
+    const handleWithdrawal = async (e) => {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById('withdrawal-amount').value);
+        const reason = document.getElementById('withdrawal-reason').value;
+
+        if (amount > 0 && reason) {
+            state.centralCash.transactions.push({
+                id: generateId(), type: 'withdrawal', amount,
+                reason, date: new Date().toISOString()
+            });
+            await saveDataToServer();
+            render();
+            document.getElementById('withdrawal-form').reset();
+        } else {
+            Swal.fire('Erro', 'Preencha o valor e o motivo da retirada.', 'error');
+        }
+    };
 
     // --- INICIALIZAÇÃO ---
     const initApp = async () => {
