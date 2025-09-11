@@ -161,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
     
-    // NOVO: Função para calcular métricas de produto
     const calculateProductMetrics = (productId) => {
         const productSales = state.sales.filter(s => s.productId === productId);
         const totalSold = productSales.reduce((sum, s) => sum + s.quantity, 0);
@@ -189,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'products':
                 renderProducts();
                 break;
-            // NOVO: Rota para a nova view de Clientes
             case 'customers':
                 renderCustomers();
                 break;
@@ -210,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'dashboard', text: 'Dashboard', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>`},
             { id: 'pdvs', text: 'PDVs', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a.75.75 0 01.75.75v.5a.75.75 0 01-1.5 0v-.5A.75.75 0 0110 2zM6.31 3.97a.75.75 0 011.06 0l.708.707a.75.75 0 01-1.06 1.06L6.31 5.03a.75.75 0 010-1.06zm9.441 1.06a.75.75 0 01-1.06-1.06l-.707.707a.75.75 0 11-1.06 1.06l.707-.707a.75.75 0 011.06 0zM4 10a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5A.75.75 0 014 10zm11.25.75a.75.75 0 010-1.5h.5a.75.75 0 010 1.5h-.5zM6.31 14.97a.75.75 0 010 1.06l-.707.707a.75.75 0 01-1.06-1.06l.707-.707a.75.75 0 011.06 0zm9.441 1.06a.75.75 0 01-1.06 0l-.708-.707a.75.75 0 11-1.06-1.06l.708.707a.75.75 0 011.06 1.06zM10 16a.75.75 0 01.75-.75h.5a.75.75 0 010 1.5h-.5a.75.75 0 01-.75-.75zM10 5a5 5 0 110 10 5 5 0 010-10z" clip-rule="evenodd" /></svg>`},
             { id: 'products', text: 'Produtos', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1h-2V4H7v1H5V4zM5 7h10v9a2 2 0 01-2 2H7a2 2 0 01-2-2V7z" /></svg>`},
-             // NOVO: Link de navegação para Clientes
             { id: 'customers', text: 'Clientes', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0110 14.25a5 5 0 01-3.43-1.58 6.97 6.97 0 00-1.5 4.33c0 .34.024.673.07 1h9.72zM12 14a5 5 0 01-10 0v-1.25a5 5 0 0110 0v1.25z"/></svg>` },
             { id: 'finances', text: 'Financeiro', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2.25 8.25h15.5M2.25 9h15.5m-15.5 2.25h15.5M2.25 15.25h15.5M2.25 6.75h15.5v10.5h-15.5V6.75zM4.75 4.5A2.25 2.25 0 002.5 6.75v10.5A2.25 2.25 0 004.75 19.5h10.5A2.25 2.25 0 0017.5 17.25V6.75A2.25 2.25 0 0015.25 4.5H4.75z"/></svg>`},
             { id: 'central_cash', text: 'Caixa Central', icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0015.5 2h-11zM10 4a.75.75 0 01.75.75v.518l3.248 1.624a.75.75 0 11-.67 1.34l-2.828-1.414V12a.75.75 0 01-1.5 0V7.818l-2.828 1.414a.75.75 0 11-.67-1.34L9.25 5.268V4.75A.75.75 0 0110 4zM8.5 14a.5.5 0 100 1h3a.5.5 0 100-1h-3z" clip-rule="evenodd" /></svg>`},
@@ -232,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', () => {
                 state.activeView = link.dataset.view;
-                mobileMenu.classList.add('hidden'); // Esconde menu mobile ao clicar
+                mobileMenu.classList.add('hidden');
                 render();
             });
         });
@@ -249,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return totals;
         }, { revenue: 0, netProfit: 0, stockValueCost: 0, stockValueResale: 0, salesCount: 0 });
 
-        // NOVO: Calcula o total pendente dos clientes
         const totalWalletBalance = state.customers.reduce((sum, c) => sum + (c.walletBalance || 0), 0);
     
         const summaryCards = `
@@ -387,9 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th scope="col" class="px-6 py-3">Lucro Acumulado</th>
                         </tr>
                     </thead>
-                    <tbody id="product-table-body">
-                        <!-- Linhas da tabela serão inseridas aqui -->
-                    </tbody>
+                    <tbody id="product-table-body"></tbody>
                 </table>
             </div>
         `;
@@ -404,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return sum + (item ? item.quantity : 0);
                 }, 0);
                 const profitPerSale = product.resalePrice - product.currentCost;
-                // NOVO: Calcula lucro acumulado
                 const { totalProfit } = calculateProductMetrics(product.id);
     
                 return `
@@ -423,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('add-product-btn').addEventListener('click', showAddProductModal);
     }
 
-    // NOVO: Função para renderizar a tela de Clientes
     function renderCustomers() {
         mainContent.innerHTML = `
             <div class="flex justify-between items-center mb-6">
@@ -432,9 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     + Novo Cliente
                 </button>
             </div>
-            <div id="customer-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Clientes serão listados aqui -->
-            </div>
+            <div id="customer-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         `;
 
         const customerList = document.getElementById('customer-list');
@@ -465,7 +455,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mainContent.innerHTML = `
             <h1 class="text-3xl font-bold text-orange-500 mb-6">Financeiro</h1>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Contas a Pagar -->
                 <div>
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-white">Contas a Pagar</h2>
@@ -475,7 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${renderFinanceList(state.accountsPayable, 'payable')}
                     </div>
                 </div>
-                <!-- Contas a Receber -->
                 <div>
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-white">Contas a Receber</h2>
@@ -524,16 +512,12 @@ document.addEventListener('DOMContentLoaded', () => {
                          <p class="font-bold text-lg ${type === 'payable' ? 'text-red-400' : 'text-green-400'}">${formatCurrency(item.amount)}</p>
                         ${!isFullyPaid 
                             ? `<button class="action-btn-pay text-sm font-semibold text-blue-400 hover:text-blue-300" data-id="${item.id}" data-type="${type}">Registrar ${type === 'payable' ? 'Pagamento' : 'Recebimento'}</button>` 
-                            : `<span class="text-sm font-semibold text-gray-500">${type === 'payable' ? 'Pago' : 'Recebido Integralmente'}</span>`
+                            : `<span class="text-sm font-semibold text-gray-500">${type === 'payable' ? 'Pago' : 'Recebido'}</span>`
                         }
                     </div>
                     <div class="flex flex-col space-y-2 ml-4">
-                        <button class="action-btn-edit text-gray-400 hover:text-white" data-id="${item.id}" data-type="${type}" title="Editar">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
-                        </button>
-                        <button class="action-btn-delete text-gray-400 hover:text-red-500" data-id="${item.id}" data-type="${type}" title="Apagar">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
-                        </button>
+                        <button class="action-btn-edit text-gray-400 hover:text-white" data-id="${item.id}" data-type="${type}" title="Editar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                        <button class="action-btn-delete text-gray-400 hover:text-red-500" data-id="${item.id}" data-type="${type}" title="Apagar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg></button>
                     </div>
                 </div>
             `;
@@ -561,11 +545,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <h1 class="text-3xl font-bold text-orange-500 mb-6">Caixa Central</h1>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gray-800 p-6 rounded-xl">
-                    <h2 class="text-gray-400 text-sm font-medium">Saldo Disponível em Caixa</h2>
+                    <h2 class="text-gray-400 text-sm font-medium">Saldo em Caixa</h2>
                     <p class="text-3xl font-bold text-green-500 mt-1">${formatCurrency(balance)}</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-xl">
-                    <h2 class="text-gray-400 text-sm font-medium">Lucro Líquido Total (Vendas)</h2>
+                    <h2 class="text-gray-400 text-sm font-medium">Lucro Líquido (Vendas)</h2>
                     <p class="text-3xl font-bold text-teal-400 mt-1">${formatCurrency(totalNetProfitFromSales)}</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-xl">
@@ -581,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
-                    <h2 class="text-xl font-bold text-white mb-4">Realizar Retirada Pessoal</h2>
+                    <h2 class="text-xl font-bold text-white mb-4">Realizar Retirada</h2>
                     <form id="withdrawal-form" class="bg-gray-800 p-6 rounded-xl space-y-4">
                         <div>
                             <label for="withdrawal-amount" class="block text-sm font-medium text-gray-300 mb-1">Valor</label>
@@ -591,15 +575,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <label for="withdrawal-reason" class="block text-sm font-medium text-gray-300 mb-1">Motivo</label>
                             <input type="text" id="withdrawal-reason" required class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 focus:ring-orange-500 focus:border-orange-500" placeholder="Ex: Adiantamento, Pró-labore">
                         </div>
-                        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Confirmar Retirada</button>
+                        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Confirmar</button>
                     </form>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-white mb-4">Histórico de Transações do Caixa</h2>
+                    <h2 class="text-xl font-bold text-white mb-4">Histórico de Transações</h2>
                     <div class="bg-gray-800 p-4 rounded-xl max-h-80 overflow-y-auto">
-                        <div id="cash-transactions" class="space-y-3">
-                            <!-- transações aqui -->
-                        </div>
+                        <div id="cash-transactions" class="space-y-3"></div>
                     </div>
                 </div>
             </div>
@@ -610,20 +592,12 @@ document.addEventListener('DOMContentLoaded', () => {
             transactionsList.innerHTML = '<p class="text-gray-400 text-center py-4">Nenhuma transação registrada.</p>';
         } else {
             const transactionColors = {
-                receivable: 'text-green-400',
-                sale: 'text-green-400',
-                wallet_payment: 'text-green-400',
-                withdrawal: 'text-red-400',
-                payable: 'text-red-400',
-                stock_purchase: 'text-red-400',
+                receivable: 'text-green-400', sale: 'text-green-400', wallet_payment: 'text-green-400',
+                withdrawal: 'text-red-400', payable: 'text-red-400', stock_purchase: 'text-red-400',
             };
             const transactionSigns = {
-                receivable: '+',
-                sale: '+',
-                wallet_payment: '+',
-                withdrawal: '-',
-                payable: '-',
-                stock_purchase: '-',
+                receivable: '+', sale: '+', wallet_payment: '+',
+                withdrawal: '-', payable: '-', stock_purchase: '-',
             };
 
             transactionsList.innerHTML = [...state.centralCash.transactions]
@@ -662,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label for="report-end-date" class="text-sm font-medium text-gray-300">Data Fim</label>
                         <input type="date" id="report-end-date" class="w-full mt-1 bg-gray-700 border border-gray-600 rounded-md p-2 focus:ring-orange-500 focus:border-orange-500">
                     </div>
-                    <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg">Gerar Relatório</button>
+                    <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg">Gerar</button>
                 </form>
             </div>
             <div id="report-results">
@@ -692,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const costName = document.getElementById('pdv-fixed-cost-name').value;
                 const costValue = parseFloat(document.getElementById('pdv-fixed-cost-value').value);
                 if (!name || isNaN(investment)) {
-                    Swal.showValidationMessage(`Por favor, preencha o nome e o investimento.`);
+                    Swal.showValidationMessage(`Preencha o nome e o investimento.`);
                 }
                 return { name, investment, costName, costValue };
             }
@@ -700,12 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.isConfirmed) {
                 const { name, investment, costName, costValue } = result.value;
                 const newPdv = {
-                    id: generateId(),
-                    name,
-                    initialInvestment: investment || 0,
-                    fixedCosts: [],
-                    variableCosts: [],
-                    inventory: []
+                    id: generateId(), name, initialInvestment: investment || 0,
+                    fixedCosts: [], variableCosts: [], inventory: []
                 };
                 if(costName && !isNaN(costValue)) {
                     newPdv.fixedCosts.push({ id: generateId(), name: costName, value: costValue });
@@ -739,12 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 const { name, cost, resalePrice } = result.value;
-                state.products.push({
-                    id: generateId(),
-                    name,
-                    currentCost: cost,
-                    resalePrice
-                });
+                state.products.push({ id: generateId(), name, currentCost: cost, resalePrice });
                 await saveDataToServer();
                 render();
             }
@@ -784,12 +749,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 Swal.fire({
                     title: `Custo de ${product.name}`,
-                    text: `O último custo registrado para este produto foi ${formatCurrency(product.currentCost)}. O custo da nova compra é o mesmo?`,
+                    text: `O último custo foi ${formatCurrency(product.currentCost)}. O custo da nova compra é o mesmo?`,
                     icon: 'question',
                     showCancelButton: true,
                     showDenyButton: true,
-                    confirmButtonText: 'Sim, é o mesmo valor',
-                    denyButtonText: 'Não, quero informar um novo valor',
+                    confirmButtonText: 'Sim, mesmo valor',
+                    denyButtonText: 'Não, informar novo valor',
                     cancelButtonText: 'Cancelar'
                 }).then(costResult => {
                     if (costResult.isConfirmed) {
@@ -804,13 +769,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             confirmButtonText: 'Salvar Novo Custo',
                             inputValidator: (value) => {
                                 if (!value || parseFloat(value) <= 0) {
-                                    return 'Você precisa informar um valor de custo válido!'
+                                    return 'Informe um valor de custo válido!'
                                 }
                             }
                         }).then(newCostResult => {
                             if (newCostResult.isConfirmed) {
                                 const newCost = parseFloat(newCostResult.value);
-                                product.currentCost = newCost; // Atualiza o custo principal do produto
+                                product.currentCost = newCost;
                                 addStock(pdvId, productId, quantity, newCost);
                             }
                         });
@@ -832,21 +797,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const product = getProduct(productId);
         const totalCost = cost * quantity;
 
-        // Adiciona como custo variável para o PDV
         pdv.variableCosts.push({
-            id: generateId(),
-            name: `Compra de ${quantity}x ${product.name}`,
-            value: totalCost,
-            date: new Date().toISOString()
+            id: generateId(), name: `Compra de ${quantity}x ${product.name}`,
+            value: totalCost, date: new Date().toISOString()
         });
 
-        // Debita a compra do caixa central
         state.centralCash.transactions.push({
-            id: generateId(),
-            type: 'stock_purchase',
-            amount: totalCost,
-            reason: `Compra estoque: ${product.name} (${pdv.name})`,
-            date: new Date().toISOString()
+            id: generateId(), type: 'stock_purchase', amount: totalCost,
+            reason: `Compra estoque: ${product.name} (${pdv.name})`, date: new Date().toISOString()
         });
         
         await saveDataToServer();
@@ -854,11 +812,10 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     };
 
-    // ALTERADO: Modal de venda agora com opção de pagamento
     const showAddSaleModal = (pdvId) => {
         const pdv = getPdv(pdvId);
         if (!pdv.inventory || pdv.inventory.length === 0) {
-            Swal.fire('Estoque Vazio', `O PDV ${pdv.name} não tem produtos no estoque para vender.`, 'warning');
+            Swal.fire('Estoque Vazio', `O PDV ${pdv.name} não tem produtos para vender.`, 'warning');
             return;
         }
 
@@ -882,26 +839,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 <h3 class="swal2-title text-lg mt-4 !text-orange-500">Forma de Pagamento</h3>
                 <div class="flex justify-center gap-4 my-2">
-                    <label class="flex items-center">
-                        <input type="radio" name="payment-method" value="cash" class="form-radio h-5 w-5 text-orange-600" checked>
-                        <span class="ml-2 text-gray-300">À vista</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" name="payment-method" value="wallet" class="form-radio h-5 w-5 text-orange-600" ${customerOptions ? '' : 'disabled'}>
-                        <span class="ml-2 text-gray-300 ${customerOptions ? '' : 'opacity-50'}">Fiado (Cliente)</span>
-                    </label>
+                    <label class="flex items-center"><input type="radio" name="payment-method" value="cash" class="form-radio h-5 w-5 text-orange-600" checked><span class="ml-2 text-gray-300">À vista</span></label>
+                    <label class="flex items-center"><input type="radio" name="payment-method" value="wallet" class="form-radio h-5 w-5 text-orange-600" ${customerOptions ? '' : 'disabled'}><span class="ml-2 text-gray-300 ${customerOptions ? '' : 'opacity-50'}">Fiado (Cliente)</span></label>
                 </div>
                 <select id="sale-customer-id" class="swal2-select hidden">${customerOptions}</select>
-                ${!customerOptions ? '<p class="text-xs text-yellow-500">Cadastre clientes para usar a opção "Fiado".</p>' : ''}
+                ${!customerOptions ? '<p class="text-xs text-yellow-500">Cadastre clientes para usar "Fiado".</p>' : ''}
             `,
             didOpen: () => {
-                const walletRadio = document.querySelector('input[value="wallet"]');
-                const customerSelect = document.getElementById('sale-customer-id');
-                walletRadio.addEventListener('change', () => {
-                    customerSelect.classList.toggle('hidden', !walletRadio.checked);
-                });
-                document.querySelector('input[value="cash"]').addEventListener('change', (e) => {
-                    if (e.target.checked) customerSelect.classList.add('hidden');
+                document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        document.getElementById('sale-customer-id').classList.toggle('hidden', e.target.value !== 'wallet');
+                    });
                 });
             },
             confirmButtonText: 'Registrar',
@@ -913,13 +861,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
                 const customerId = document.getElementById('sale-customer-id').value;
                 
-                if (!productId || !quantity || quantity <= 0) {
-                    Swal.showValidationMessage('Selecione um produto e informe a quantidade.');
-                } else if (quantity > inventoryItem.quantity) {
-                    Swal.showValidationMessage(`Quantidade insuficiente em estoque. Disponível: ${inventoryItem.quantity}`);
-                } else if (paymentMethod === 'wallet' && !customerId) {
-                    Swal.showValidationMessage('Selecione um cliente para a venda fiado.');
-                }
+                if (!productId || !quantity || quantity <= 0) Swal.showValidationMessage('Selecione um produto e a quantidade.');
+                else if (quantity > inventoryItem.quantity) Swal.showValidationMessage(`Estoque insuficiente. Disponível: ${inventoryItem.quantity}`);
+                else if (paymentMethod === 'wallet' && !customerId) Swal.showValidationMessage('Selecione um cliente.');
+                
                 return { pdvId, productId, quantity, paymentMethod, customerId };
             }
         }).then(async result => {
@@ -932,32 +877,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 inventoryItem.quantity -= quantity;
 
                 const newSale = {
-                    id: generateId(),
-                    pdvId,
-                    productId,
-                    quantity,
-                    unitPrice: product.resalePrice,
-                    totalPrice: product.resalePrice * quantity,
-                    costAtTimeOfSale: product.currentCost,
-                    date: new Date().toISOString(),
-                    paymentMethod,
-                    customerId: paymentMethod === 'wallet' ? customerId : null
+                    id: generateId(), pdvId, productId, quantity,
+                    unitPrice: product.resalePrice, totalPrice: product.resalePrice * quantity,
+                    costAtTimeOfSale: product.currentCost, date: new Date().toISOString(),
+                    paymentMethod, customerId: paymentMethod === 'wallet' ? customerId : null
                 };
                 state.sales.push(newSale);
 
                 let successMessage = 'Venda Registrada!';
-
                 if (paymentMethod === 'cash') {
-                    // Adiciona a venda ao caixa central
                     state.centralCash.transactions.push({
-                        id: generateId(),
-                        type: 'sale',
-                        amount: newSale.totalPrice,
-                        reason: `Venda: ${product.name} (${pdv.name})`,
-                        date: newSale.date
+                        id: generateId(), type: 'sale', amount: newSale.totalPrice,
+                        reason: `Venda: ${product.name} (${pdv.name})`, date: newSale.date
                     });
                     successMessage = 'Venda registrada e valor adicionado ao caixa!';
-                } else { // 'wallet'
+                } else {
                     const customer = getCustomer(customerId);
                     if (customer) {
                         customer.walletBalance = (customer.walletBalance || 0) + newSale.totalPrice;
@@ -978,18 +912,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const inventoryHtml = pdv.inventory.length > 0 ? pdv.inventory.map(item => {
             const product = getProduct(item.productId);
-            if (!product) return '';
-            return `<li class="flex justify-between text-sm py-1"><span>${product.name}</span> <span class="font-mono">${item.quantity} un.</span></li>`;
+            return product ? `<li class="flex justify-between text-sm py-1"><span>${product.name}</span> <span class="font-mono">${item.quantity} un.</span></li>` : '';
         }).join('') : '<p class="text-sm text-gray-500">Estoque vazio.</p>';
     
-        const costsHtml = (title, costs) => {
-            return `
-                <h4 class="font-semibold text-orange-400 mt-4 mb-2">${title}</h4>
-                ${costs.length > 0 ? `<ul>${costs.map(c => `
-                    <li class="flex justify-between text-sm py-1"><span>${c.name}</span> <span class="font-semibold">${formatCurrency(c.value)}</span></li>
-                `).join('')}</ul>` : '<p class="text-sm text-gray-500">Nenhum custo registrado.</p>'}
-            `;
-        };
+        const costsHtml = (title, costs) => `
+            <h4 class="font-semibold text-orange-400 mt-4 mb-2">${title}</h4>
+            ${costs.length > 0 ? `<ul>${costs.map(c => `<li class="flex justify-between text-sm py-1"><span>${c.name}</span> <span class="font-semibold">${formatCurrency(c.value)}</span></li>`).join('')}</ul>` : '<p class="text-sm text-gray-500">Nenhum custo.</p>'}`;
     
         Swal.fire({
             title: `Detalhes de ${pdv.name}`,
@@ -1014,24 +942,15 @@ document.addEventListener('DOMContentLoaded', () => {
                              </ul>
                         </div>
                     </div>
-                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gray-700/50 p-4 rounded-lg">
-                            <h3 class="font-bold text-lg text-white">Inventário Atual</h3>
-                            <ul class="mt-2 space-y-1 max-h-40 overflow-y-auto pr-2">${inventoryHtml}</ul>
-                        </div>
-                        <div class="bg-gray-700/50 p-4 rounded-lg">
-                             <h3 class="font-bold text-lg text-white">Custos</h3>
-                             ${costsHtml('Fixos', pdv.fixedCosts)}
-                             ${costsHtml('Variáveis (Compras, etc)', pdv.variableCosts)}
-                        </div>
+                        <div class="bg-gray-700/50 p-4 rounded-lg"><h3 class="font-bold text-lg text-white">Inventário</h3><ul class="mt-2 space-y-1 max-h-40 overflow-y-auto pr-2">${inventoryHtml}</ul></div>
+                        <div class="bg-gray-700/50 p-4 rounded-lg"><h3 class="font-bold text-lg text-white">Custos</h3>${costsHtml('Fixos', pdv.fixedCosts)}${costsHtml('Variáveis', pdv.variableCosts)}</div>
                     </div>
-                    
                     <div>
                         <h3 class="font-bold text-lg text-white">Definir Meta Mensal</h3>
                          <div class="flex items-center space-x-2 mt-2">
                              <input type="number" id="goal-target" step="100" class="swal2-input w-full" placeholder="Valor da Meta" value="${state.goals[pdv.id]?.target || ''}">
-                             <button id="save-goal-btn" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700">Salvar Meta</button>
+                             <button id="save-goal-btn" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700">Salvar</button>
                          </div>
                     </div>
                 </div>
@@ -1046,33 +965,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         renderDashboard();
                         Swal.fire('Meta Salva!', '', 'success');
                     } else {
-                        Swal.showValidationMessage('Informe um valor válido para a meta.');
+                        Swal.showValidationMessage('Informe um valor válido.');
                     }
                 });
             }
         });
     }
 
-    // --- FUNÇÕES FINANCEIRAS MODIFICADAS ---
-
     function showAddFinanceModal(type, item = null) {
         const title = `${item ? 'Editar' : 'Nova'} ${type === 'payable' ? 'Conta a Pagar' : 'Conta a Receber'}`;
-        const pdvOptions = `<option value="geral" ${item?.pdvId === 'geral' ? 'selected' : ''}>Geral / Administrativo</option>` + state.pdvs.map(p => `<option value="${p.id}" ${item?.pdvId === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
+        const pdvOptions = `<option value="geral" ${item?.pdvId === 'geral' ? 'selected' : ''}>Geral / Admin</option>` + state.pdvs.map(p => `<option value="${p.id}" ${item?.pdvId === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
 
-        let recurringHtml = '';
-        if (type === 'receivable') {
-            recurringHtml = `
-                <div class="flex items-center justify-center mt-4">
-                    <input id="finance-recurring" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500" ${item?.isRecurring ? 'checked' : ''}>
-                    <label for="finance-recurring" class="ml-2 block text-sm text-gray-300">Renovação Automática Mensal</label>
-                </div>
-            `;
-        }
+        const recurringHtml = type === 'receivable' ? `
+            <div class="flex items-center justify-center mt-4">
+                <input id="finance-recurring" type="checkbox" class="h-4 w-4 rounded" ${item?.isRecurring ? 'checked' : ''}>
+                <label for="finance-recurring" class="ml-2 block text-sm">Renovação Mensal Automática</label>
+            </div>` : '';
 
         Swal.fire({
             title,
             html: `
-                <input id="finance-description" class="swal2-input" placeholder="Descrição (ex: Conta de Luz)" value="${item?.description || ''}">
+                <input id="finance-description" class="swal2-input" placeholder="Descrição" value="${item?.description || ''}">
                 <input id="finance-amount" type="number" step="0.01" class="swal2-input" placeholder="Valor" value="${item?.amount || ''}">
                 <input id="finance-due-date" type="date" class="swal2-input" value="${item ? new Date(item.dueDate).toISOString().split('T')[0] : ''}">
                 <select id="finance-pdv-id" class="swal2-select">${pdvOptions}</select>
@@ -1095,22 +1008,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }).then(async result => {
             if (result.isConfirmed) {
                 const data = result.value;
+                const list = type === 'payable' ? state.accountsPayable : state.accountsReceivable;
                 if (item) {
-                    const list = type === 'payable' ? state.accountsPayable : state.accountsReceivable;
                     const existingItem = list.find(i => i.id === item.id);
                     Object.assign(existingItem, data);
                 } else {
-                    const newItem = {
-                        id: generateId(),
-                        ...data,
-                        paid: false,
-                        payments: []
-                    };
-                    if (type === 'payable') {
-                        state.accountsPayable.push(newItem);
-                    } else {
-                        state.accountsReceivable.push(newItem);
-                    }
+                    list.push({ id: generateId(), ...data, paid: false, payments: [] });
                 }
                 await saveDataToServer();
                 render();
@@ -1121,31 +1024,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function showEditFinanceModal(id, type) {
         const list = type === 'payable' ? state.accountsPayable : state.accountsReceivable;
         const item = list.find(i => i.id === id);
-        if (item) {
-            showAddFinanceModal(type, item);
-        }
+        if (item) showAddFinanceModal(type, item);
     }
 
     const handleDeleteFinanceItem = async (id, type) => {
-        const list = type === 'payable' ? state.accountsPayable : state.accountsReceivable;
-        const item = list.find(i => i.id === id);
+        const listName = type === 'payable' ? 'accountsPayable' : 'accountsReceivable';
+        const item = state[listName].find(i => i.id === id);
 
         Swal.fire({
-            title: 'Você tem certeza?',
-            text: `Deseja apagar "${item.description}"? Esta ação não pode ser desfeita.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sim, apagar!',
-            cancelButtonText: 'Cancelar'
+            title: 'Você tem certeza?', text: `Deseja apagar "${item.description}"?`,
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33',
+            confirmButtonText: 'Sim, apagar!', cancelButtonText: 'Cancelar'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                if (type === 'payable') {
-                    state.accountsPayable = state.accountsPayable.filter(i => i.id !== id);
-                } else {
-                    state.accountsReceivable = state.accountsReceivable.filter(i => i.id !== id);
-                }
+                state[listName] = state[listName].filter(i => i.id !== id);
                 await saveDataToServer();
                 render();
                 Swal.fire('Apagado!', 'O lançamento foi removido.', 'success');
@@ -1159,13 +1051,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!item || item.paid) return;
             item.paid = true;
             state.centralCash.transactions.push({
-                id: generateId(),
-                type: 'payable',
-                amount: item.amount,
+                id: generateId(), type: 'payable', amount: item.amount,
                 reason: `Pagamento: ${item.description} (${getPdv(item.pdvId)?.name || 'Geral'})`,
                 date: new Date().toISOString()
             });
-            Swal.fire('Sucesso!', 'Conta marcada como paga e valor debitado do caixa central.', 'success');
+            Swal.fire('Sucesso!', 'Conta paga e valor debitado do caixa.', 'success');
         } else {
             const item = state.accountsReceivable.find(i => i.id === id);
             if (!item || item.paid) return;
@@ -1173,41 +1063,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const remaining = item.amount - totalPaid;
             const { value: paymentAmount } = await Swal.fire({
                 title: 'Registrar Recebimento',
-                text: `Valor total: ${formatCurrency(item.amount)}. Restante: ${formatCurrency(remaining)}`,
-                input: 'number',
-                inputValue: remaining.toFixed(2),
-                inputAttributes: { step: '0.01' },
-                showCancelButton: true,
+                text: `Total: ${formatCurrency(item.amount)}. Restante: ${formatCurrency(remaining)}`,
+                input: 'number', inputValue: remaining.toFixed(2),
+                inputAttributes: { step: '0.01' }, showCancelButton: true,
                 confirmButtonText: 'Registrar',
-                cancelButtonText: 'Cancelar',
-                inputValidator: (value) => {
-                    if (!value || parseFloat(value) <= 0 || parseFloat(value) > remaining) {
-                        return `Por favor, insira um valor válido (maior que zero e menor ou igual a ${formatCurrency(remaining)})`;
-                    }
-                }
+                inputValidator: (v) => !v || +v <= 0 || +v > remaining ? `Insira um valor válido` : null
             });
             if (paymentAmount) {
                 const receivedAmount = parseFloat(paymentAmount);
                 if (!item.payments) item.payments = [];
-                item.payments.push({
-                    amount: receivedAmount,
-                    date: new Date().toISOString()
-                });
+                item.payments.push({ amount: receivedAmount, date: new Date().toISOString() });
                 state.centralCash.transactions.push({
-                    id: generateId(),
-                    type: 'receivable',
-                    amount: receivedAmount,
+                    id: generateId(), type: 'receivable', amount: receivedAmount,
                     reason: `Recebimento: ${item.description} (${getPdv(item.pdvId)?.name || 'Geral'})`,
                     date: new Date().toISOString()
                 });
-                const newTotalPaid = totalPaid + receivedAmount;
-                if (newTotalPaid >= item.amount) {
+                if (totalPaid + receivedAmount >= item.amount) {
                     item.paid = true;
-                    if (item.isRecurring) {
-                        renewReceivable(item);
-                    }
+                    if (item.isRecurring) renewReceivable(item);
                 }
-                Swal.fire('Sucesso!', 'Recebimento registrado e valor creditado no caixa central.', 'success');
+                Swal.fire('Sucesso!', 'Recebimento registrado e valor creditado no caixa.', 'success');
             }
         }
         await saveDataToServer();
@@ -1217,14 +1092,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const renewReceivable = (item) => {
         const dueDate = new Date(item.dueDate);
         dueDate.setMonth(dueDate.getMonth() + 1);
-        const newItem = {
-            ...item,
-            id: generateId(),
-            dueDate: dueDate.toISOString(),
-            paid: false,
-            payments: []
-        };
-        state.accountsReceivable.push(newItem);
+        state.accountsReceivable.push({
+            ...item, id: generateId(), dueDate: dueDate.toISOString(), paid: false, payments: []
+        });
     };
 
     const handleWithdrawal = async (e) => {
@@ -1234,77 +1104,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (amount > 0 && reason) {
             state.centralCash.transactions.push({
-                id: generateId(),
-                type: 'withdrawal',
-                amount,
-                reason,
-                date: new Date().toISOString()
+                id: generateId(), type: 'withdrawal', amount, reason, date: new Date().toISOString()
             });
             await saveDataToServer();
             render();
             document.getElementById('withdrawal-form').reset();
         } else {
-            Swal.fire('Erro', 'Preencha o valor e o motivo da retirada.', 'error');
+            Swal.fire('Erro', 'Preencha o valor e o motivo.', 'error');
         }
     };
 
     const handleGenerateReport = (e) => {
         if(e) e.preventDefault();
-        const pdvId = document.getElementById('report-pdv')?.value || 'all';
-        const startDate = document.getElementById('report-start-date')?.value || null;
-        const endDate = document.getElementById('report-end-date')?.value || null;
+        const pdvId = document.getElementById('report-pdv')?.value;
+        const startDate = document.getElementById('report-start-date')?.value;
+        const endDate = document.getElementById('report-end-date')?.value;
+        const resultsDiv = document.getElementById('report-results');
 
         if(!startDate || !endDate){
-             document.getElementById('report-results').innerHTML = `<p class="text-gray-500 text-center">Selecione um período para gerar o relatório.</p>`;
+             resultsDiv.innerHTML = `<p class="text-gray-500 text-center">Selecione um período.</p>`;
             return;
         }
 
         const metrics = pdvId === 'all' 
             ? state.pdvs.reduce((acc, pdv) => {
-                const pdvMetrics = calculatePdvMetrics(pdv.id, startDate, endDate);
-                acc.revenue += pdvMetrics.revenue;
-                acc.netProfit += pdvMetrics.netProfit;
-                acc.salesCount += pdvMetrics.salesCount;
+                const m = calculatePdvMetrics(pdv.id, startDate, endDate);
+                acc.revenue += m.revenue;
+                acc.netProfit += m.netProfit;
+                acc.salesCount += m.salesCount;
                 return acc;
               }, { revenue: 0, netProfit: 0, salesCount: 0 })
             : calculatePdvMetrics(pdvId, startDate, endDate);
         
         metrics.avgTicket = metrics.salesCount > 0 ? metrics.revenue / metrics.salesCount : 0;
         
-        const resultsDiv = document.getElementById('report-results');
         resultsDiv.innerHTML = `
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Vendas no Período</p><p class="text-2xl font-bold">${metrics.salesCount}</p></div>
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Ticket Médio</p><p class="text-2xl font-bold">${formatCurrency(metrics.avgTicket)}</p></div>
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Faturamento</p><p class="text-2xl font-bold text-orange-400">${formatCurrency(metrics.revenue)}</p></div>
-                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm text-gray-400">Lucro Líquido</p><p class="text-2xl font-bold text-green-400">${formatCurrency(metrics.netProfit)}</p></div>
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm">Vendas</p><p class="text-2xl font-bold">${metrics.salesCount}</p></div>
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm">Ticket Médio</p><p class="text-2xl font-bold">${formatCurrency(metrics.avgTicket)}</p></div>
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm">Faturamento</p><p class="text-2xl font-bold text-orange-400">${formatCurrency(metrics.revenue)}</p></div>
+                <div class="bg-gray-700 p-4 rounded-lg"><p class="text-sm">Lucro Líquido</p><p class="text-2xl font-bold text-green-400">${formatCurrency(metrics.netProfit)}</p></div>
             </div>
         `;
     };
-
-    // --- NOVO: Funções de gestão de clientes ---
 
     const showAddCustomerModal = () => {
         Swal.fire({
             title: 'Adicionar Novo Cliente',
             html: `<input id="customer-name" class="swal2-input" placeholder="Nome do Cliente">`,
             confirmButtonText: 'Salvar',
-            focusConfirm: false,
-            preConfirm: () => {
-                const name = document.getElementById('customer-name').value;
-                if (!name) {
-                    Swal.showValidationMessage(`Por favor, insira o nome do cliente.`);
-                }
-                return { name };
-            }
+            preConfirm: () => document.getElementById('customer-name').value || Swal.showValidationMessage(`Insira o nome.`)
         }).then(async (result) => {
             if (result.isConfirmed) {
-                const { name } = result.value;
-                state.customers.push({
-                    id: generateId(),
-                    name,
-                    walletBalance: 0
-                });
+                state.customers.push({ id: generateId(), name: result.value, walletBalance: 0 });
                 await saveDataToServer();
                 render();
             }
@@ -1325,9 +1177,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="text-xs text-gray-400">${pdv.name} - ${new Date(sale.date).toLocaleDateString('pt-BR')}</p>
                     </div>
                     <p class="font-bold text-lg text-orange-400">${formatCurrency(sale.totalPrice)}</p>
-                </div>
-            `;
-        }).join('') : '<p class="text-sm text-gray-500 text-center py-4">Nenhuma compra registrada.</p>';
+                </div>`;
+        }).join('') : '<p class="text-sm text-center py-4">Nenhuma compra registrada.</p>';
 
         Swal.fire({
             title: `Detalhes de ${customer.name}`,
@@ -1335,10 +1186,10 @@ document.addEventListener('DOMContentLoaded', () => {
             html: `
                 <div class="text-left p-4">
                     <div class="bg-gray-700/50 p-4 rounded-lg mb-4">
-                        <h3 class="font-bold text-lg text-white">Saldo Devedor</h3>
+                        <h3 class="font-bold text-lg">Saldo Devedor</h3>
                         <p class="text-3xl font-bold ${customer.walletBalance > 0 ? 'text-red-500' : 'text-green-500'}">${formatCurrency(customer.walletBalance)}</p>
                     </div>
-                    <h3 class="font-bold text-lg text-white mb-2">Histórico de Compras</h3>
+                    <h3 class="font-bold text-lg mb-2">Histórico de Compras</h3>
                     <div class="space-y-2 max-h-60 overflow-y-auto pr-2">${historyHtml}</div>
                 </div>
             `,
@@ -1353,37 +1204,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const { value: paymentAmount } = await Swal.fire({
             title: 'Registrar Pagamento de Cliente',
             text: `Saldo devedor de ${customer.name}: ${formatCurrency(customer.walletBalance)}`,
-            input: 'number',
-            inputValue: customer.walletBalance.toFixed(2),
+            input: 'number', inputValue: customer.walletBalance.toFixed(2),
             inputAttributes: { step: '0.01', min: '0.01' },
-            showCancelButton: true,
-            confirmButtonText: 'Confirmar Pagamento',
-            cancelButtonText: 'Cancelar',
-            inputValidator: (value) => {
-                if (!value || parseFloat(value) <= 0 || parseFloat(value) > customer.walletBalance) {
-                    return `Insira um valor válido (maior que zero e menor ou igual a ${formatCurrency(customer.walletBalance)})`;
-                }
-            }
+            showCancelButton: true, confirmButtonText: 'Confirmar Pagamento',
+            inputValidator: (v) => !v || +v <= 0 || +v > customer.walletBalance ? `Insira um valor válido` : null
         });
 
         if (paymentAmount) {
             const amount = parseFloat(paymentAmount);
             customer.walletBalance -= amount;
-            
             state.centralCash.transactions.push({
-                id: generateId(),
-                type: 'wallet_payment',
-                amount: amount,
-                reason: `Pagamento recebido de ${customer.name}`,
-                date: new Date().toISOString()
+                id: generateId(), type: 'wallet_payment', amount: amount,
+                reason: `Pagamento recebido de ${customer.name}`, date: new Date().toISOString()
             });
-
             await saveDataToServer();
-            Swal.fire('Sucesso!', 'Pagamento registrado e valor adicionado ao caixa central.', 'success');
+            Swal.fire('Sucesso!', 'Pagamento registrado e adicionado ao caixa.', 'success');
             render();
         }
     };
-
 
     // --- INICIALIZAÇÃO DA APLICAÇÃO ---
     const initApp = async () => {
@@ -1406,3 +1244,4 @@ document.addEventListener('DOMContentLoaded', () => {
         appContent.style.display = 'none';
     }
 });
+
