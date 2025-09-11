@@ -19,6 +19,11 @@
         .swal2-title {
              color: #f97316 !important;
         }
+        .swal2-input, .swal2-select {
+            background-color: #374151 !important;
+            color: #f3f4f6 !important;
+            border-color: #4b5563 !important;
+        }
         .swal2-styled.swal2-confirm {
             background-color: #f97316 !important;
         }
@@ -37,6 +42,25 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #ea580c;
+        }
+        /* Fade in animation */
+        .fade-in {
+            animation: fadeInAnimation ease 0.5s;
+            animation-iteration-count: 1;
+            animation-fill-mode: forwards;
+        }
+        @keyframes fadeInAnimation {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        /* Estilo para botões desabilitados */
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -60,7 +84,7 @@
                 </div>
                 <div>
                     <label for="password" class="sr-only">Senha</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full appearance-none rounded-md border border-gray-700 bg-gray-900 px-3 py-3 text-gray-100 placeholder-gray-500 focus:z-10 focus:border-orange-500 focus:outline-none focus:ring-orange-500 sm:text-sm" placeholder="Senha">
+                    <input id="password" name="password" type="password" autocomplete="current-password" required class="relative block w-full appearance-none rounded-md border border-gray-700 bg-gray-900 px-3 py-3 text-gray-100 placeholder-gray-500 focus:z-10 focus:border-orange-500 focus:outline-none focus:ring-orange-500 sm:text-sm" placeholder="Senha" value="smart@20252025">
                 </div>
                 <div>
                     <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-orange-600 py-3 px-4 text-sm font-semibold text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-300">
