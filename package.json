@@ -1,21 +1,14 @@
 {
   "name": "gestao-smart-fridge",
   "version": "1.0.0",
-  "description": "Sistema de Gestão Financeira para Smart Fridge",
+  "description": "Aplicação de gestão financeira para a Smart Fridge",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [
-    "gestao",
-    "financeiro",
-    "pdv"
-  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.18.2"
   }
 }
-
