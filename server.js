@@ -4,7 +4,17 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'db.json');
+
+// --- CONFIGURAÇÃO DO BANCO DE DADOS PERSISTENTE ---
+// Verifica se está rodando na Render e usa o caminho do disco persistente.
+// Caso contrário, usa o diretório local.
+const dataPath = process.env.RENDER_DISK_PATH || __dirname;
+const DB_PATH = path.join(dataPath, 'db.json');
+
+// Garante que o diretório de dados exista (importante para a primeira execução na Render)
+if (!fs.existsSync(dataPath)) {
+    fs.mkdirSync(dataPath, { recursive: true });
+}
 
 // Middleware para parsear JSON
 app.use(express.json());
@@ -29,12 +39,17 @@ const initialState = {
 
 // --- Funções do "Banco de Dados" (db.json) ---
 const readDb = () => {
+    // Se o arquivo não existir, cria com o estado inicial
     if (!fs.existsSync(DB_PATH)) {
         fs.writeFileSync(DB_PATH, JSON.stringify(initialState, null, 2));
         return initialState;
     }
     try {
         const data = fs.readFileSync(DB_PATH, 'utf8');
+        // Se o arquivo estiver vazio, retorna o estado inicial
+        if (data.trim() === '') {
+            return initialState;
+        }
         const dbState = JSON.parse(data);
         return { ...initialState, ...dbState };
     } catch (error) {
@@ -80,6 +95,6 @@ app.get('*', (req, res) => {
 
 // Iniciar o servidor
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT} e salvando dados em ${DB_PATH}`);
 });
 
