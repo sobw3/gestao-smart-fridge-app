@@ -203,12 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { revenue: 0, grossProfit: 0, costOfGoodsSold: 0, totalCosts: 0, finalProfit: 0 });
 
         const summaryCards = `
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Faturamento (PIX)</h3><p class="mt-1 text-3xl font-semibold text-orange-500">${formatCurrency(totalMetrics.revenue)}</p></div>
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Custo de Produtos Vendidos</h3><p class="mt-1 text-3xl font-semibold text-yellow-500">${formatCurrency(totalMetrics.costOfGoodsSold)}</p></div>
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Lucro Bruto (Realizado)</h3><p class="mt-1 text-3xl font-semibold text-green-400">${formatCurrency(totalMetrics.grossProfit)}</p></div>
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Custos Totais</h3><p class="mt-1 text-3xl font-semibold text-red-400">${formatCurrency(totalMetrics.totalCosts)}</p></div>
-                <div class="bg-gray-800 p-5 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Resultado Líquido</h3><p class="mt-1 text-3xl font-semibold  ${totalMetrics.finalProfit >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(totalMetrics.finalProfit)}</p></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-6 mb-8">
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Faturamento (PIX)</h3><p class="mt-1 text-2xl font-semibold text-orange-500">${formatCurrency(totalMetrics.revenue)}</p></div>
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Custo Produtos Vendidos</h3><p class="mt-1 text-2xl font-semibold text-yellow-500">${formatCurrency(totalMetrics.costOfGoodsSold)}</p></div>
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Lucro Bruto (Realizado)</h3><p class="mt-1 text-2xl font-semibold text-green-400">${formatCurrency(totalMetrics.grossProfit)}</p></div>
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Custos Totais</h3><p class="mt-1 text-2xl font-semibold text-red-400">${formatCurrency(totalMetrics.totalCosts)}</p></div>
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Resultado Líquido</h3><p class="mt-1 text-2xl font-semibold  ${totalMetrics.finalProfit >= 0 ? 'text-green-500' : 'text-red-500'}">${formatCurrency(totalMetrics.finalProfit)}</p></div>
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Saldo em Carteira</h3><p class="mt-1 text-2xl font-semibold text-blue-400">${formatCurrency(state.digitalWallet?.balance || 0)}</p></div>
+                <div class="bg-gray-800 p-4 rounded-xl shadow-lg"><h3 class="text-sm font-medium text-gray-400">Crédito a Receber</h3><p class="mt-1 text-2xl font-semibold text-cyan-400">${formatCurrency(state.smartCredit?.receivable || 0)}</p></div>
             </div>`;
 
         const pdvStatusSection = `
