@@ -141,11 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const stockValueCost = pdv?.inventory.reduce((sum, item) => {
             const product = getProduct(item.productId);
+            if (!product) return sum;
             return sum + (product.currentCost * item.quantity);
         }, 0) || 0;
 
         const stockValueResale = pdv?.inventory.reduce((sum, item) => {
             const product = getProduct(item.productId);
+            if (!product) return sum;
             return sum + (product.resalePrice * item.quantity);
         }, 0) || 0;
 
@@ -821,6 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const productOptions = pdv.inventory.filter(i => i.quantity > 0).map(item => {
             const product = getProduct(item.productId);
+            if (!product) return '';
             return `<option value="${product.id}"> ${product.name} (${item.quantity} em estoque)</option>`;
         }).join('');
 
@@ -1170,6 +1173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const historyHtml = salesHistory.length > 0 ? salesHistory.map(sale => {
             const product = getProduct(sale.productId);
             const pdv = getPdv(sale.pdvId);
+            if (!product || !pdv) return '';
             return `
                 <div class="flex justify-between items-center bg-gray-700/50 p-3 rounded-md">
                     <div>
@@ -1244,8 +1248,4 @@ document.addEventListener('DOMContentLoaded', () => {
         appContent.style.display = 'none';
     }
 });
-" in the canvas.Entendido. Você está correto ao identificar que a causa do problema é o arquivo `server.js`. A mistura de código de frontend e backend causou o erro que vimos.
-
-Para corrigir definitivamente, vou gerar novamente o arquivo `server.js` com o conteúdo correto. Certifique-se de substituir completamente o conteúdo do seu arquivo `server.js` por este.
-
 
