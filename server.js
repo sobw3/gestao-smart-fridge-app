@@ -6,54 +6,39 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- CONFIGURAÇÃO DO BANCO DE DADOS PERSISTENTE ---
-// Verifica se está rodando na Render e usa o caminho do disco persistente.
-// Caso contrário, usa o diretório local.
+// Utiliza o caminho do Disco da Render, se disponível.
 const dataPath = process.env.RENDER_DISK_PATH || __dirname;
 const DB_PATH = path.join(dataPath, 'db.json');
 
-// Garante que o diretório de dados exista (importante para a primeira execução na Render)
+// Garante que o diretório de dados exista
 if (!fs.existsSync(dataPath)) {
     fs.mkdirSync(dataPath, { recursive: true });
 }
 
-// Middleware para parsear JSON
+// Middlewares
 app.use(express.json());
-
-// Servir arquivos estáticos da raiz do projeto
 app.use(express.static(path.join(__dirname)));
 
 // --- Estado Inicial do Banco de Dados ---
 const initialState = {
-    pdvs: [],
-    products: [],
-    sales: [],
-    accountsPayable: [],
-    accountsReceivable: [],
-    customers: [],
-    goals: {},
-    centralCash: {
-        transactions: []
-    },
-    activeView: 'dashboard'
+    pdvs: [], products: [], sales: [], accountsPayable: [],
+    accountsReceivable: [], customers: [], goals: {},
+    centralCash: { transactions: [] }, activeView: 'dashboard'
 };
 
-// --- Funções do "Banco de Dados" (db.json) ---
+// --- Funções do Banco de Dados (db.json) ---
 const readDb = () => {
-    // Se o arquivo não existir, cria com o estado inicial
     if (!fs.existsSync(DB_PATH)) {
         fs.writeFileSync(DB_PATH, JSON.stringify(initialState, null, 2));
         return initialState;
     }
     try {
         const data = fs.readFileSync(DB_PATH, 'utf8');
-        // Se o arquivo estiver vazio, retorna o estado inicial
-        if (data.trim() === '') {
-            return initialState;
-        }
+        if (data.trim() === '') return initialState;
         const dbState = JSON.parse(data);
         return { ...initialState, ...dbState };
     } catch (error) {
-        console.error("Erro ao ler db.json, restaurando para o estado inicial:", error);
+        console.error("Erro ao ler db.json, restaurando:", error);
         fs.writeFileSync(DB_PATH, JSON.stringify(initialState, null, 2));
         return initialState;
     }
@@ -65,7 +50,7 @@ const writeDb = (data) => {
 
 // --- Rotas da API ---
 
-// Rota de Login
+// Login
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     if (username === 'admin' && password === 'smart@20252025') {
@@ -75,26 +60,25 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// Rota para obter todos os dados
+// Obter dados
 app.get('/api/data', (req, res) => {
-    const data = readDb();
-    res.json(data);
+    res.json(readDb());
 });
 
-// Rota para salvar todos os dados
+// Salvar dados
 app.post('/api/data', (req, res) => {
-    const data = req.body;
-    writeDb(data);
+    writeDb(req.body);
     res.status(200).send({ message: 'Dados salvos com sucesso' });
 });
 
-// Rota de fallback para servir o index.html
+// Rota de fallback para o app
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Iniciar o servidor
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT} e salvando dados em ${DB_PATH}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Banco de dados sendo salvo em: ${DB_PATH}`);
 });
 
