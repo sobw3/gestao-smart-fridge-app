@@ -19,6 +19,11 @@
         .swal2-title {
              color: #f97316 !important;
         }
+        .swal2-input, .swal2-select {
+            background-color: #374151 !important;
+            color: #f3f4f6 !important;
+            border-color: #4b5563 !important;
+        }
         .swal2-styled.swal2-confirm {
             background-color: #f97316 !important;
         }
@@ -29,7 +34,7 @@
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #1f2937;
+            background: #111827;
         }
         ::-webkit-scrollbar-thumb {
             background: #f97316;
@@ -37,6 +42,13 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #ea580c;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
